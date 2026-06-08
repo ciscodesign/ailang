@@ -85,6 +85,20 @@ impl Graph {
 }
 ```
 
+// crates/ailang-effects/src/lib.rs
+pub enum Effect { Net, Db, Fs, Llm, Human, Clock, Rand, Ui }
+pub struct EffectSet(BTreeSet<Effect>);
+impl EffectSet {
+    pub fn empty() -> Self;
+    pub fn of(effects: &[Effect]) -> Self;
+    pub fn contains(&self, e: Effect) -> bool;
+    pub fn union(&self, other: &EffectSet) -> EffectSet;
+    pub fn is_subset_of(&self, other: &EffectSet) -> bool;
+}
+pub struct CapToken { /* private */ }
+impl CapToken { pub fn new(effect: Effect) -> Self; pub fn next(self) -> Self; }
+```
+
 There is no `TypeEnum`. There is no `Type::option()` or `Type::result()` constructor.
 Use `Type::Option(Box::new(t))` and `Type::Result(Box::new(ok), Box::new(err))` directly.
 
