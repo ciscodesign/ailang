@@ -1,6 +1,6 @@
 use std::fmt;
 use blake3::hash;
-#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 pub struct NodeId([u8; 32]);
 impl NodeId {
     pub fn of(bytes: &[u8]) -> Self {
