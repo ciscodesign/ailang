@@ -1,0 +1,2 @@
+[dependencies]
+thiserror.workspace = true

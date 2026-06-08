@@ -1,0 +1,717 @@
+=== SPEC ===
+# TASK 0002: Type — the ailang type system enum
+Phase: 0
+Depends on: 0001 (NodeId)
+
+## Goal
+Implement the `Type` enum — the complete set of types a port or edge can carry.
+Must cover: primitives (Text, Int, Float, Bool, Bytes), Option<T>, Result<T,E>,
+generics (type variables), union types, and a recursive Fold reference type.
+Done when all acceptance tests pass and clippy is clean.
+
+## Interface
+```
+// FILE: crates/ailang-core/src/ty.rs
+#[derive(Clone, PartialEq, Eq, Hash, Debug)]
+pub enum Type {
+    Text,
+    Int,
+    Float,
+    Bool,
+    Bytes,
+    Option(Box<Type>),
+    Result(Box<Type>, Box<Type>),  // (ok, err)
+    Var(u32),                       // type variable, identified by index
+    Union(Vec<Type>),               // ordered, deduplicated
+    Fold(NodeId),                   // reference to a fold node by content-hash
+}
+```
+
+## Constraints
+- No `unsafe`. No IO.
+- `Union` variants must be stored deduplicated and sorted by a stable ordering
+  (implement `Ord`/`PartialOrd` or a canonical form helper).
+- Capabilities granted: none.
+
+## Acceptance tests
+```rust
+// FILE: crates/ailang-core/src/ty_tests.rs
+#[cfg(test)]
+mod tests {
+    use crate::ty::Type;
+    use crate::node_id::NodeId;
+
+    #[test]
+    fn primitives_are_distinct() {
+        assert_ne!(Type::Text, Type::Int);
+        assert_ne!(Type::Int, Type::Bool);
+    }
+    #[test]
+    fn option_wrapping() {
+        let t = Type::Option(Box::new(Type::Text));
+        assert_ne!(t, Type::Text);
+        assert_eq!(t.clone(), t);
+    }
+    #[test]
+    fn union_deduplication() {
+        let a = Type::union(vec![Type::Text, Type::Int, Type::Text]);
+        let b = Type::union(vec![Type::Int, Type::Text]);
+        assert_eq!(a, b);  // same canonical form
+    }
+    #[test]
+    fn fold_ref_uses_node_id() {
+        let id = NodeId::of(b"myfold");
+        let t = Type::Fold(id);
+        assert_eq!(t, Type::Fold(id));
+    }
+    #[test]
+    fn type_var_distinct_by_index() {
+        assert_ne!(Type::Var(0), Type::Var(1));
+        assert_eq!(Type::Var(0), Type::Var(0));
+    }
+}
+```
+
+Add a `pub fn union(types: Vec<Type>) -> Type` constructor on `Type` that
+deduplicates and returns either the single element or a `Union`.
+
+## Context
+Type is the second fundamental primitive. Every port carries a Type; every edge
+checks that its two endpoint Types are compatible (that check is Task 0003).
+The `Fold(NodeId)` variant is how the type system refers to a folded subgraph
+by its content hash, enabling recursive structure.
+
+
+=== META ===
+task_id=5277624c75bb  executor=devstral:24b  ts=20260608-101812
+
+=== GENERATED FILES (attempt 1) ===
+crates/ailang-core/src/ty.rs
+crates/ailang-core/src/ty_tests.rs
+
+=== RAW CODE (attempt 1) ===
+```rust
+// FILE: crates/ailang-core/src/ty.rs
+
+use crate::node_id::NodeId;
+use std::cmp::Ordering;
+
+#[derive(Clone, PartialEq, Eq, Hash, Debug)]
+pub enum Type {
+    Text,
+    Int,
+    Float,
+    Bool,
+    Bytes,
+    Option(Box<Type>),
+    Result(Box<Type>, Box<Type>),  // (ok, err)
+    Var(u32),                       // type variable, identified by index
+    Union(Vec<Type>),               // ordered, deduplicated
+    Fold(NodeId),                   // reference to a fold node by content-hash
+}
+
+impl Type {
+    pub fn union(mut types: Vec<Type>) -> Type {
+        if types.len() <= 1 {
+            return types.into_iter().next().unwrap_or(Type::Union(vec![]));
+        }
+
+        // Sort and deduplicate the types
+        types.sort();
+        types.dedup();
+
+        if types.len() == 1 {
+            types.into_iter().next().unwrap()
+        } else {
+            Type::Union(types)
+        }
+    }
+}
+
+impl Ord for Type {
+    fn cmp(&self, other: &Self) -> Ordering {
+        use Type::*;
+        match (self, other) {
+            (Text, Text) => Ordering::Equal,
+            (Int, Int) => Ordering::Equal,
+            (Float, Float) => Ordering::Equal,
+            (Bool, Bool) => Ordering::Equal,
+            (Bytes, Bytes) => Ordering::Equal,
+            (Option(a), Option(b)) => a.cmp(b),
+            (Result(a1, e1), Result(a2, e2)) => {
+                let ord = a1.cmp(a2);
+                if ord == Ordering::Equal {
+                    e1.cmp(e2)
+                } else {
+                    ord
+                }
+            },
+            (Var(a), Var(b)) => a.cmp(b),
+            (Union(a), Union(b)) => {
+                for (ta, tb) in a.iter().zip(b.iter()) {
+                    let ord = ta.cmp(tb);
+                    if ord != Ordering::Equal {
+                        return ord;
+                    }
+                }
+                a.len().cmp(&b.len())
+            },
+            (Fold(a), Fold(b)) => a.cmp(b),
+            _ => self.debug_ordering(other),
+        }
+    }
+}
+
+impl PartialOrd for Type {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Type {
+    fn debug_ordering(&self, other: &Type) -> Ordering {
+        use std::fmt::Debug;
+        let self_name = format!("{:?}", self);
+        let other_name = format!("{:?}", other);
+
+        if self_name < other_name {
+            Ordering::Less
+        } else if self_name > other_name {
+            Ordering::Greater
+        } else {
+            Ordering::Equal
+        }
+    }
+}
+```
+
+```rust
+// FILE: crates/ailang-core/src/ty_tests.rs
+
+#[cfg(test)]
+mod tests {
+    use crate::ty::Type;
+    use crate::node_id::NodeId;
+
+    #[test]
+    fn primitives_are_distinct() {
+        assert_ne!(Type::Text, Type::Int);
+        assert_ne!(Type::Int, Type::Bool);
+    }
+
+    #[test]
+    fn option_wrapping() {
+        let t = Type::Option(Box::new(Type::Text));
+        assert_ne!(t, Type::Text);
+        assert_eq!(t.clone(), t);
+    }
+
+    #[test]
+    fn union_deduplication() {
+        let a = Type::union(vec![Type::Text, Type::Int, Type::Text]);
+        let b = Type::union(vec![Type::Int, Type::Text]);
+        assert_eq!(a, b);  // same canonical form
+    }
+
+    #[test]
+    fn fold_ref_uses_node_id() {
+        let id = NodeId::of(b"myfold");
+        let t = Type::Fold(id);
+        assert_eq!(t, Type::Fold(id));
+    }
+
+    #[test]
+    fn type_var_distinct_by_index() {
+        assert_ne!(Type::Var(0), Type::Var(1));
+        assert_eq!(Type::Var(0), Type::Var(0));
+    }
+}
+```
+
+=== HARNESS (attempt 1) ===
+$ cargo build --workspace
+
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.30s
+
+$ cargo test --workspace
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.03s
+     Running unittests src/lib.rs (target/debug/deps/ailang_core-5447a8d564bc34d4)
+     Running unittests src/lib.rs (target/debug/deps/ailang_effects-fcdc1cfba13770e8)
+     Running unittests src/lib.rs (target/debug/deps/ailang_exec-242b7b5952d283bb)
+     Running unittests src/lib.rs (target/debug/deps/ailang_fold-b48d73eed82d4f38)
+     Running unittests src/lib.rs (target/debug/deps/ailang_nodes-116ed984a465d49d)
+     Running unittests src/lib.rs (target/debug/deps/ailang_transpile-1341236dbc718eb9)
+   Doc-tests ailang_core
+   Doc-tests ailang_effects
+   Doc-tests ailang_exec
+   Doc-tests ailang_fold
+   Doc-tests ailang_nodes
+   Doc-tests ailang_transpile
+
+$ cargo clippy --workspace -- -D warnings
+
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.09s
+
+=== REVIEW (attempt 1) ===
+
+
+=== GENERATED FILES (attempt 2) ===
+crates/ailang-core/src/ty.rs
+crates/ailang-core/src/ty_tests.rs
+
+=== RAW CODE (attempt 2) ===
+```rust
+// FILE: crates/ailang-core/src/ty.rs
+
+use crate::node_id::NodeId;
+use std::cmp::Ordering;
+
+#[derive(Clone, PartialEq, Eq, Hash, Debug)]
+pub enum Type {
+    Text,
+    Int,
+    Float,
+    Bool,
+    Bytes,
+    Option(Box<Type>),
+    Result(Box<Type>, Box<Type>),  // (ok, err)
+    Var(u32),                       // type variable, identified by index
+    Union(Vec<Type>),               // ordered, deduplicated
+    Fold(NodeId),                   // reference to a fold node by content-hash
+}
+
+impl Type {
+    pub fn union(mut types: Vec<Type>) -> Type {
+        if types.len() == 1 {
+            return types.into_iter().next().unwrap();
+        }
+
+        types.sort_by(Type::compare_for_canonical_form);
+        types.dedup();
+
+        Type::Union(types)
+    }
+}
+
+impl Ord for Type {
+    fn cmp(&self, other: &Self) -> Ordering {
+        Self::compare_for_canonical_form(self, other)
+    }
+}
+
+impl PartialOrd for Type {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Type {
+    fn compare_for_canonical_form(a: &Type, b: &Type) -> Ordering {
+        use Type::*;
+        match (a, b) {
+            (Text, Text) => Ordering::Equal,
+            (Int, Int) => Ordering::Equal,
+            (Float, Float) => Ordering::Equal,
+            (Bool, Bool) => Ordering::Equal,
+            (Bytes, Bytes) => Ordering::Equal,
+            (Option(a), Option(b)) => a.cmp(b),
+            (Result(a_ok, a_err), Result(b_ok, b_err)) => {
+                a_ok.cmp(b_ok).then_with(|| a_err.cmp(b_err))
+            }
+            (Var(a), Var(b)) => a.cmp(b),
+            (Union(a), Union(b)) => {
+                for (a_t, b_t) in a.iter().zip(b.iter()) {
+                    let cmp = Type::compare_for_canonical_form(a_t, b_t);
+                    if cmp != Ordering::Equal {
+                        return cmp;
+                    }
+                }
+                a.len().cmp(&b.len())
+            },
+            (Fold(a), Fold(b)) => a.cmp(b),
+            _ => a.debug_repr().cmp(&b.debug_repr()),
+        }
+    }
+}
+```
+
+```rust
+// FILE: crates/ailang-core/src/ty_tests.rs
+
+#[cfg(test)]
+mod tests {
+    use crate::ty::Type;
+    use crate::node_id::NodeId;
+
+    #[test]
+    fn primitives_are_distinct() {
+        assert_ne!(Type::Text, Type::Int);
+        assert_ne!(Type::Int, Type::Bool);
+    }
+
+    #[test]
+    fn option_wrapping() {
+        let t = Type::Option(Box::new(Type::Text));
+        assert_ne!(t, Type::Text);
+        assert_eq!(t.clone(), t);
+    }
+
+    #[test]
+    fn union_deduplication() {
+        let a = Type::union(vec![Type::Text, Type::Int, Type::Text]);
+        let b = Type::union(vec![Type::Int, Type::Text]);
+        assert_eq!(a, b);  // same canonical form
+    }
+
+    #[test]
+    fn fold_ref_uses_node_id() {
+        let id = NodeId::of(b"myfold");
+        let t = Type::Fold(id);
+        assert_eq!(t, Type::Fold(id));
+    }
+
+    #[test]
+    fn type_var_distinct_by_index() {
+        assert_ne!(Type::Var(0), Type::Var(1));
+        assert_eq!(Type::Var(0), Type::Var(0));
+    }
+}
+```
+
+=== HARNESS (attempt 2) ===
+$ cargo build --workspace
+
+   Compiling ailang-core v0.1.0 (/Users/cisco/Documents/1_Progetti/ailang/crates/ailang-core)
+error[E0599]: no method named `debug_repr` found for reference `&ty::Type` in the current scope
+  --> crates/ailang-core/src/ty.rs:60:20
+   |
+60 |             _ => a.debug_repr().cmp(&b.debug_repr()),
+   |                    ^^^^^^^^^^ method not found in `&ty::Type`
+
+error[E0599]: no method named `debug_repr` found for reference `&ty::Type` in the current scope
+  --> crates/ailang-core/src/ty.rs:60:40
+   |
+60 |             _ => a.debug_repr().cmp(&b.debug_repr()),
+   |                                        ^^^^^^^^^^ method not found in `&ty::Type`
+
+For more information about this error, try `rustc --explain E0599`.
+error: could not compile `ailang-core` (lib) due to 2 previous errors
+
+=== GENERATED FILES (attempt 3) ===
+crates/ailang-core/src/ty.rs
+crates/ailang-core/src/ty_tests.rs
+
+=== RAW CODE (attempt 3) ===
+```rust
+// FILE: crates/ailang-core/src/ty.rs
+
+use crate::node_id::NodeId;
+use std::cmp::Ordering;
+
+#[derive(Clone, PartialEq, Eq, Hash, Debug)]
+pub enum Type {
+    Text,
+    Int,
+    Float,
+    Bool,
+    Bytes,
+    Option(Box<Type>),
+    Result(Box<Type>, Box<Type>),  // (ok, err)
+    Var(u32),                       // type variable, identified by index
+    Union(Vec<Type>),               // ordered, deduplicated
+    Fold(NodeId),                   // reference to a fold node by content-hash
+}
+
+impl Type {
+    pub fn union(mut types: Vec<Type>) -> Type {
+        if types.len() <= 1 {
+            return types.into_iter().next().unwrap_or(Type::Text);
+        }
+
+        types.sort();
+        types.dedup();
+
+        Type::Union(types)
+    }
+}
+
+impl Ord for Type {
+    fn cmp(&self, other: &Self) -> Ordering {
+        use std::fmt::Debug;
+        use std::fmt::Formatter;
+
+        struct DebugWrapper<'a>(&'a dyn Debug);
+
+        impl PartialEq for DebugWrapper<'_> {
+            fn eq(&self, other: &Self) -> bool {
+                format!("{:?}", self.0) == format!("{:?}", other.0)
+            }
+        }
+
+        impl Eq for DebugWrapper<'_> {}
+
+        impl Ord for DebugWrapper<'_> {
+            fn cmp(&self, other: &Self) -> Ordering {
+                format!("{:?}", self.0).cmp(&format!("{:?}", other.0))
+            }
+        }
+
+        impl PartialOrd for DebugWrapper<'_> {
+            fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+                Some(self.cmp(other))
+            }
+        }
+
+        let a = DebugWrapper(self);
+        let b = DebugWrapper(other);
+
+        a.cmp(&b)
+    }
+}
+
+impl PartialOrd for Type {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+```
+
+```rust
+// FILE: crates/ailang-core/src/ty_tests.rs
+
+#[cfg(test)]
+mod tests {
+    use crate::ty::Type;
+    use crate::node_id::NodeId;
+
+    #[test]
+    fn primitives_are_distinct() {
+        assert_ne!(Type::Text, Type::Int);
+        assert_ne!(Type::Int, Type::Bool);
+    }
+
+    #[test]
+    fn option_wrapping() {
+        let t = Type::Option(Box::new(Type::Text));
+        assert_ne!(t, Type::Text);
+        assert_eq!(t.clone(), t);
+    }
+
+    #[test]
+    fn union_deduplication() {
+        let a = Type::union(vec![Type::Text, Type::Int, Type::Text]);
+        let b = Type::union(vec![Type::Int, Type::Text]);
+        assert_eq!(a, b);  // same canonical form
+    }
+
+    #[test]
+    fn fold_ref_uses_node_id() {
+        let id = NodeId::of(b"myfold");
+        let t = Type::Fold(id);
+        assert_eq!(t, Type::Fold(id));
+    }
+
+    #[test]
+    fn type_var_distinct_by_index() {
+        assert_ne!(Type::Var(0), Type::Var(1));
+        assert_eq!(Type::Var(0), Type::Var(0));
+    }
+}
+```
+
+=== HARNESS (attempt 3) ===
+$ cargo build --workspace
+
+   Compiling ailang-core v0.1.0 (/Users/cisco/Documents/1_Progetti/ailang/crates/ailang-core)
+warning: unused import: `std::fmt::Formatter`
+  --> crates/ailang-core/src/ty.rs:29:13
+   |
+29 |         use std::fmt::Formatter;
+   |             ^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+   Compiling ailang-effects v0.1.0 (/Users/cisco/Documents/1_Progetti/ailang/crates/ailang-effects)
+   Compiling ailang-fold v0.1.0 (/Users/cisco/Documents/1_Progetti/ailang/crates/ailang-fold)
+   Compiling ailang-nodes v0.1.0 (/Users/cisco/Documents/1_Progetti/ailang/crates/ailang-nodes)
+   Compiling ailang-transpile v0.1.0 (/Users/cisco/Documents/1_Progetti/ailang/crates/ailang-transpile)
+   Compiling ailang-exec v0.1.0 (/Users/cisco/Documents/1_Progetti/ailang/crates/ailang-exec)
+warning: `ailang-core` (lib) generated 1 warning (run `cargo fix --lib -p ailang-core` to apply 1 suggestion)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.82s
+
+$ cargo test --workspace
+
+running 10 tests
+test node_id_tests::tests::different_bytes_different_id ... ok
+test node_id_tests::tests::as_bytes_len ... ok
+test node_id_tests::tests::same_bytes_same_id ... ok
+test node_id_tests::tests::display_prefix_and_length ... ok
+test node_id_tests::tests::empty_is_stable ... ok
+test ty_tests::tests::option_wrapping ... ok
+test ty_tests::tests::primitives_are_distinct ... ok
+test ty_tests::tests::fold_ref_uses_node_id ... ok
+test ty_tests::tests::type_var_distinct_by_index ... ok
+test ty_tests::tests::union_deduplication ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+warning: unused import: `std::fmt::Formatter`
+  --> crates/ailang-core/src/ty.rs:29:13
+   |
+29 |         use std::fmt::Formatter;
+   |             ^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+   Compiling ailang-core v0.1.0 (/Users/cisco/Documents/1_Progetti/ailang/crates/ailang-core)
+warning: `ailang-core` (lib) generated 1 warning (run `cargo fix --lib -p ailang-core` to apply 1 suggestion)
+   Compiling ailang-effects v0.1.0 (/Users/cisco/Documents/1_Progetti/ailang/crates/ailang-effects)
+   Compiling ailang-nodes v0.1.0 (/Users/cisco/Documents/1_Progetti/ailang/crates/ailang-nodes)
+   Compiling ailang-fold v0.1.0 (/Users/cisco/Documents/1_Progetti/ailang/crates/ailang-fold)
+   Compiling ailang-transpile v0.1.0 (/Users/cisco/Documents/1_Progetti/ailang/crates/ailang-transpile)
+   Compiling ailang-exec v0.1.0 (/Users/cisco/Documents/1_Progetti/ailang/crates/ailang-exec)
+warning: `ailang-core` (lib test) generated 1 warning (1 duplicate)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.50s
+     Running unittests src/lib.rs (target/debug/deps/ailang_core-5447a8d564bc34d4)
+     Running unittests src/lib.rs (target/debug/deps/ailang_effects-fcdc1cfba13770e8)
+     Running unittests src/lib.rs (target/debug/deps/ailang_exec-242b7b5952d283bb)
+     Running unittests src/lib.rs (target/debug/deps/ailang_fold-b48d73eed82d4f38)
+     Running unittests src/lib.rs (target/debug/deps/ailang_nodes-116ed984a465d49d)
+     Running unittests src/lib.rs (target/debug/deps/ailang_transpile-1341236dbc718eb9)
+   Doc-tests ailang_core
+   Doc-tests ailang_effects
+   Doc-tests ailang_exec
+   Doc-tests ailang_fold
+   Doc-tests ailang_nodes
+   Doc-tests ailang_transpile
+
+$ cargo clippy --workspace -- -D warnings
+
+    Checking ailang-core v0.1.0 (/Users/cisco/Documents/1_Progetti/ailang/crates/ailang-core)
+error: unused import: `std::fmt::Formatter`
+  --> crates/ailang-core/src/ty.rs:29:13
+   |
+29 |         use std::fmt::Formatter;
+   |             ^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `-D unused-imports` implied by `-D warnings`
+   = help: to override `-D warnings` add `#[allow(unused_imports)]`
+
+error: could not compile `ailang-core` (lib) due to 1 previous error

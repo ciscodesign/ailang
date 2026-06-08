@@ -1,0 +1,9 @@
+[package]
+name    = "ailang-fold"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+ailang-core    = { path = "../ailang-core" }
+ailang-effects = { path = "../ailang-effects" }
+thiserror.workspace = true

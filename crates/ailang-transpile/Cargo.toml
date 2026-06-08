@@ -1,0 +1,10 @@
+[package]
+name    = "ailang-transpile"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+ailang-core    = { path = "../ailang-core" }
+ailang-effects = { path = "../ailang-effects" }
+ailang-fold    = { path = "../ailang-fold" }
+anyhow.workspace = true

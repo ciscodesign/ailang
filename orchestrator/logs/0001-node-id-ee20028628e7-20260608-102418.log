@@ -1,0 +1,176 @@
+=== SPEC ===
+# TASK 0001: NodeId — content-addressed identifier
+Phase: 0
+Depends on: none
+
+## Goal
+Implement `NodeId`, the identity of a node. A `NodeId` is the blake3 hash of a
+node's canonical byte encoding. Two nodes with identical bytes must produce
+identical `NodeId`s; any byte difference must produce a different `NodeId` with
+overwhelming probability. Done when all acceptance tests pass and clippy is clean.
+
+## Interface
+```
+// FILE: crates/ailang-core/src/node_id.rs
+pub struct NodeId([u8; 32]);
+
+impl NodeId {
+    pub fn of(bytes: &[u8]) -> Self;
+    pub fn as_bytes(&self) -> &[u8; 32];
+}
+
+// Derive: Clone, Copy, PartialEq, Eq, Hash, Debug
+// Display: "blake3:" + first 12 hex chars of the hash
+```
+
+## Constraints
+- Use only the `blake3` workspace crate. No other dependencies.
+- No `unsafe`. No IO. Fully deterministic.
+- Capabilities granted: none.
+
+## Acceptance tests
+```rust
+// FILE: crates/ailang-core/src/node_id_tests.rs
+#[cfg(test)]
+mod tests {
+    use crate::node_id::NodeId;
+
+    #[test]
+    fn same_bytes_same_id() {
+        assert_eq!(NodeId::of(b"hello"), NodeId::of(b"hello"));
+    }
+    #[test]
+    fn different_bytes_different_id() {
+        assert_ne!(NodeId::of(b"hello"), NodeId::of(b"hellp"));
+    }
+    #[test]
+    fn empty_is_stable() {
+        assert_eq!(NodeId::of(b""), NodeId::of(b""));
+    }
+    #[test]
+    fn display_prefix_and_length() {
+        let s = format!("{}", NodeId::of(b"x"));
+        assert!(s.starts_with("blake3:"));
+        assert_eq!(s.len(), "blake3:".len() + 12);
+    }
+    #[test]
+    fn as_bytes_len() {
+        assert_eq!(NodeId::of(b"abc").as_bytes().len(), 32);
+    }
+}
+```
+
+## Context
+This is the first task in ailang-core. NodeId is the content-addressing primitive
+used by every node and fold in the system (design §4.1, §4.4). Keep it tiny and
+dependency-light — everything builds on it.
+Add `blake3.workspace = true` to crates/ailang-core/Cargo.toml if not already present.
+
+
+=== META ===
+task_id=ee20028628e7  executor=qwen3.6  ts=20260608-102418
+
+=== GENERATED FILES (attempt 1) ===
+crates/ailang-core/Cargo.toml
+crates/ailang-core/src/lib.rs
+crates/ailang-core/src/node_id.rs
+crates/ailang-core/src/node_id_tests.rs
+
+=== RAW CODE (attempt 1) ===
+```rust
+// FILE: crates/ailang-core/Cargo.toml
+[dependencies]
+blake3.workspace = true
+```
+
+```rust
+// FILE: crates/ailang-core/src/lib.rs
+pub mod node_id;
+
+#[cfg(test)]
+mod node_id_tests;
+```
+
+```rust
+// FILE: crates/ailang-core/src/node_id.rs
+use std::fmt;
+
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
+pub struct NodeId([u8; 32]);
+
+impl NodeId {
+    pub fn of(bytes: &[u8]) -> Self {
+        Self(blake3::hash(bytes).as_bytes())
+    }
+
+    pub fn as_bytes(&self) -> &[u8; 32] {
+        &self.0
+    }
+}
+
+impl fmt::Display for NodeId {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "blake3:")?;
+        for &b in &self.0[..6] {
+            write!(f, "{:02x}", b)?;
+        }
+        Ok(())
+    }
+}
+```
+
+```rust
+// FILE: crates/ailang-core/src/node_id_tests.rs
+#[cfg(test)]
+mod tests {
+    use crate::node_id::NodeId;
+
+    #[test]
+    fn same_bytes_same_id() {
+        assert_eq!(NodeId::of(b"hello"), NodeId::of(b"hello"));
+    }
+
+    #[test]
+    fn different_bytes_different_id() {
+        assert_ne!(NodeId::of(b"hello"), NodeId::of(b"hellp"));
+    }
+
+    #[test]
+    fn empty_is_stable() {
+        assert_eq!(NodeId::of(b""), NodeId::of(b""));
+    }
+
+    #[test]
+    fn display_prefix_and_length() {
+        let s = format!("{}", NodeId::of(b"x"));
+        assert!(s.starts_with("blake3:"));
+        assert_eq!(s.len(), "blake3:".len() + 12);
+    }
+
+    #[test]
+    fn as_bytes_len() {
+        assert_eq!(NodeId::of(b"abc").as_bytes().len(), 32);
+    }
+
+    #[test]
+    fn hash_consistency() {
+        let id = NodeId::of(b"consistent");
+        use std::collections::HashSet;
+        let mut set = HashSet::new();
+        assert!(set.insert(id));
+        assert!(!set.insert(NodeId::of(b"consistent")));
+    }
+}
+```
+
+=== HARNESS (attempt 1) ===
+$ cargo build --workspace
+
+error: failed to load manifest for workspace member `/Users/cisco/Documents/1_Progetti/ailang/crates/ailang-core`
+referenced by workspace at `/Users/cisco/Documents/1_Progetti/ailang/Cargo.toml`
+
+Caused by:
+  failed to parse manifest at `/Users/cisco/Documents/1_Progetti/ailang/crates/ailang-core/Cargo.toml`
+
+Caused by:
+  this virtual manifest specifies a `dependencies` section, which is not allowed

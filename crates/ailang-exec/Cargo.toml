@@ -1,0 +1,14 @@
+[package]
+name    = "ailang-exec"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+ailang-core    = { path = "../ailang-core" }
+ailang-effects = { path = "../ailang-effects" }
+ailang-nodes   = { path = "../ailang-nodes" }
+ailang-fold    = { path = "../ailang-fold" }
+serde.workspace      = true
+serde_json.workspace = true
+thiserror.workspace  = true
+anyhow.workspace     = true

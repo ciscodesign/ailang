@@ -1,0 +1,8 @@
+[package]
+name    = "ailang-effects"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+ailang-core  = { path = "../ailang-core" }
+thiserror.workspace = true
