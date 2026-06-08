@@ -2,6 +2,7 @@ pub mod node_id;
 pub mod ty;
 pub mod unify;
 pub mod graph;
+pub mod serial;
 
 #[cfg(test)]
 mod node_id_tests;
@@ -11,3 +12,7 @@ mod ty_tests;
 mod unify_tests;
 #[cfg(test)]
 mod graph_tests;
+#[cfg(test)]
+mod graph_effects_tests;
+#[cfg(test)]
+mod serial_tests;
