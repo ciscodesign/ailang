@@ -1,6 +1,6 @@
 # ailang — Project State
 
-Last activity: 2026-06-08 - Phase 1 COMPLETE — all 11 tasks done, 50 tests passing
+Last activity: 2026-06-08 - Phase 2 in progress — 0012 (builtin-nodes) done, 59 tests passing
 
 ---
 
@@ -24,8 +24,14 @@ Status: COMPLETE
 - 0010: eval (Kahn topological sort, executes graph, passes outputs as inputs)
 - 0011: codegen (emit Rust source from Graph: Const:* → todo!, Code:<expr> → expr)
 
+### Phase 2 in progress (Runnable Programs)
+- 0012: builtin-nodes (add_int, sub_int, mul_int, neg_int, concat_text, not_bool, and_bool, or_bool) ✓
+- 0013: codegen-wiring — in progress (orchestrator running)
+- 0014: graph-builder — pending
+- 0015: cli — pending
+
 ### Test count
-50 tests passing (33 ailang-core + 4 ailang-effects + 10 ailang-exec + 3 ailang-transpile)
+59 tests passing (33 ailang-core + 4 ailang-effects + 10 ailang-exec + 3 ailang-transpile + 9 ailang-nodes)
 
 ---
 
@@ -41,3 +47,4 @@ Status: COMPLETE
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
 | 260608-f5y | Fix lib.rs module collision after task-0004 executor overwrite (28 tests restored) | 2026-06-08 | 1e04ea4 | 260608-f5y-fix-orchestrator-file-corruption-and-ens |
+| 260608-lon | Implement 0012-builtin-nodes manually (fix double-??, mut inputs, HashMap construction) | 2026-06-08 | 98ac264 | 260608-lon-implement-0012-builtin-nodes-fix-broken- |
