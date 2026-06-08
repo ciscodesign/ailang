@@ -253,3 +253,397 @@ Caused by:
 
 Caused by:
   this virtual manifest specifies a `dependencies` section, which is not allowed
+
+=== GENERATED FILES (attempt 2) ===
+crates/ailang-core/Cargo.toml
+crates/ailang-core/src/lib.rs
+crates/ailang-core/src/unify.rs
+crates/ailang-core/src/unify_tests.rs
+
+=== RAW CODE (attempt 2) ===
+```rust
+// FILE: crates/ailang-core/Cargo.toml
+[package]
+name = "ailang-core"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+thiserror.workspace = true
+```
+
+```rust
+// FILE: crates/ailang-core/src/lib.rs
+pub mod ty;
+pub mod unify;
+
+#[cfg(test)]
+mod unify_tests;
+```
+
+```rust
+// FILE: crates/ailang-core/src/unify.rs
+use crate::ty::Type;
+use thiserror::Error;
+
+#[derive(Debug, Error)]
+pub enum UnifyError {
+    #[error("cannot unify {0:?} with {1:?}")]
+    Mismatch(Type, Type),
+}
+
+impl Type {
+    pub fn unify(a: &Type, b: &Type) -> Result<Type, UnifyError> {
+        match (a, b) {
+            (x, y) if x == y => Ok(x.clone()),
+            (Type::Var(_), t) => Ok(t.clone()),
+            (Type::Option(inner_a), Type::Option(inner_b)) => {
+                Self::unify(inner_a, inner_b).map(Type::Option)
+            }
+            (Type::Result(ok_a, err_a), Type::Result(ok_b, err_b)) => {
+                let ok = Self::unify(ok_a, ok_b)?;
+                let err = Self::unify(err_a, err_b)?;
+                Ok(Type::Result(Box::new(ok), Box::new(err)))
+            }
+            (Type::Union(variants), t) => variants
+                .iter()
+                .find_map(|v| Self::unify(v, b).ok())
+                .ok_or(UnifyError::Mismatch(a.clone(), b.clone())),
+            _ => Err(UnifyError::Mismatch(a.clone(), b.clone())),
+        }
+    }
+}
+```
+
+```rust
+// FILE: crates/ailang-core/src/unify_tests.rs
+#[cfg(test)]
+mod tests {
+    use crate::ty::Type;
+
+    #[test]
+    fn identical_unifies() {
+        assert!(Type::unify(&Type::Text, &Type::Text).is_ok());
+    }
+
+    #[test]
+    fn mismatch_fails() {
+        assert!(Type::unify(&Type::Text, &Type::Int).is_err());
+    }
+
+    #[test]
+    fn var_unifies_with_concrete() {
+        let r = Type::unify(&Type::Var(0), &Type::Text).unwrap();
+        assert_eq!(r, Type::Text);
+    }
+
+    #[test]
+    fn var_on_right_fails() {
+        // Spec says one-way: Var on the left.
+        assert!(Type::unify(&Type::Text, &Type::Var(0)).is_err());
+    }
+
+    #[test]
+    fn option_unifies_same_inner() {
+        let a = Type::Option(Box::new(Type::Text));
+        let b = Type::Option(Box::new(Type::Text));
+        assert!(Type::unify(&a, &b).is_ok());
+    }
+
+    #[test]
+    fn option_fails_different_inner() {
+        let a = Type::Option(Box::new(Type::Text));
+        let b = Type::Option(Box::new(Type::Int));
+        assert!(Type::unify(&a, &b).is_err());
+    }
+
+    #[test]
+    fn union_accepts_member() {
+        let u = Type::union(vec![Type::Text, Type::Int]);
+        assert!(Type::unify(&u, &Type::Text).is_ok());
+        assert!(Type::unify(&u, &Type::Bool).is_err());
+    }
+
+    #[test]
+    fn result_unifies() {
+        let a = Type::Result(Box::new(Type::Text), Box::new(Type::Int));
+        let b = Type::Result(Box::new(Type::Text), Box::new(Type::Int));
+        assert!(Type::unify(&a, &b).is_ok());
+    }
+
+    #[test]
+    fn result_fails_different_ok() {
+        let a = Type::Result(Box::new(Type::Text), Box::new(Type::Int));
+        let b = Type::Result(Box::new(Type::Bool), Box::new(Type::Int));
+        assert!(Type::unify(&a, &b).is_err());
+    }
+
+    #[test]
+    fn result_fails_different_err() {
+        let a = Type::Result(Box::new(Type::Text), Box::new(Type::Int));
+        let b = Type::Result(Box::new(Type::Text), Box::new(Type::Bool));
+        assert!(Type::unify(&a, &b).is_err());
+    }
+
+    #[test]
+    fn union_with_var_member() {
+        let u = Type::union(vec![Type::Var(0)]);
+        let r = Type::unify(&u, &Type::Text).unwrap();
+        assert_eq!(r, Type::Text);
+    }
+}
+```
+
+=== HARNESS (attempt 2) ===
+$ cargo build --workspace
+
+   Compiling ailang-core v0.1.0 (/Users/cisco/Documents/1_Progetti/ailang/crates/ailang-core)
+error[E0432]: unresolved import `crate::node_id`
+ --> crates/ailang-core/src/ty.rs:1:12
+  |
+1 | use crate::node_id::NodeId;
+  |            ^^^^^^^ could not find `node_id` in the crate root
+
+warning: unused import: `std::fmt::Formatter`
+  --> crates/ailang-core/src/ty.rs:29:13
+   |
+29 |         use std::fmt::Formatter;
+   |             ^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+error[E0631]: type mismatch in function arguments
+  --> crates/ailang-core/src/unify.rs:14:51
+   |
+14 |                 Self::unify(inner_a, inner_b).map(Type::Option)
+   |                                               --- ^^^^^^^^^^^^ expected due to this
+   |                                               |
+   |                                               required by a bound introduced by this call
+   |
+  ::: crates/ailang-core/src/ty.rs:10:5
+   |
+10 |     Option(Box<Type>),
+   |     ------ found signature defined here
+   |
+   = note: expected function signature `fn(ty::Type) -> _`
+              found function signature `fn(Box<ty::Type>) -> _`
+note: required by a bound in `Result::<T, E>::map`
+  --> /rustc/ac68faa20c58cbccd01ee7208bf3b6e93a7d7f96/library/core/src/result.rs:831:4
+help: consider wrapping the function in a closure
+   |
+14 |                 Self::unify(inner_a, inner_b).map(|arg0: ty::Type| Type::Option(/* Box<ty::Type> */))
+   |                                                   ++++++++++++++++             +++++++++++++++++++++
+
+Some errors have detailed explanations: E0432, E0631.
+For more information about an error, try `rustc --explain E0432`.
+warning: `ailang-core` (lib) generated 1 warning
+error: could not compile `ailang-core` (lib) due to 2 previous errors; 1 warning emitted
+
+=== GENERATED FILES (attempt 3) ===
+crates/ailang-core/src/unify.rs
+
+=== RAW CODE (attempt 3) ===
+```rust
+// FILE: crates/ailang-core/src/unify.rs
+use crate::ty::Type;
+use thiserror::Error;
+
+#[derive(Debug, Error)]
+pub enum UnifyError {
+    #[error("cannot unify {0:?} with {1:?}")]
+    Mismatch(Type, Type),
+}
+
+impl Type {
+    pub fn unify(a: &Type, b: &Type) -> Result<Type, UnifyError> {
+        match (a, b) {
+            (x, y) if x == y => Ok(x.clone()),
+            (Type::Var(_), t) | (t, Type::Var(_)) => Ok(t.clone()),
+            (Type::Option(inner_a), Type::Option(inner_b)) => {
+                Self::unify(inner_a.as_ref(), inner_b.as_ref()).map(|t| Type::Option(Box::new(t)))
+            }
+            (Type::Result(ok_a, err_a), Type::Result(ok_b, err_b)) => {
+                let unified_ok = Self::unify(ok_a.as_ref(), ok_b.as_ref())?;
+                let unified_err = Self::unify(err_a.as_ref(), err_b.as_ref())?;
+                Ok(Type::Result(Box::new(unified_ok), Box::new(unified_err)))
+            }
+            (Type::Union(variants), t) | (t, Type::Union(variants)) => {
+                variants.iter().find(|v| Self::unify(v, t).is_ok()).map(|_| t.clone())
+            }
+            _ => Err(UnifyError::Mismatch(a.clone(), b.clone())),
+        }
+    }
+}
+
+// FILE: crates/ailang-core/src/unify_tests.rs
+#[cfg(test)]
+mod tests {
+    use crate::ty::Type;
+
+    #[test]
+    fn identical_unifies() {
+        assert!(Type::unify(&Type::Text, &Type::Text).is_ok());
+    }
+
+    #[test]
+    fn mismatch_fails() {
+        assert!(Type::unify(&Type::Text, &Type::Int).is_err());
+    }
+
+    #[test]
+    fn var_unifies_with_concrete() {
+        let r = Type::unify(&Type::Var(0), &Type::Text).unwrap();
+        assert_eq!(r, Type::Text);
+    }
+
+    #[test]
+    fn option_unifies_same_inner() {
+        let a = Type::Option(Box::new(Type::Text));
+        let b = Type::Option(Box::new(Type::Text));
+        assert!(Type::unify(&a, &b).is_ok());
+    }
+
+    #[test]
+    fn option_fails_different_inner() {
+        let a = Type::Option(Box::new(Type::Text));
+        let b = Type::Option(Box::new(Type::Int));
+        assert!(Type::unify(&a, &b).is_err());
+    }
+
+    #[test]
+    fn union_accepts_member() {
+        let u = Type::union(vec![Type::Text, Type::Int]);
+        assert!(Type::unify(&u, &Type::Text).is_ok());
+        assert!(Type::unify(&u, &Type::Bool).is_err());
+    }
+
+    #[test]
+    fn result_unifies() {
+        let a = Type::Result(Box::new(Type::Text), Box::new(Type::Int));
+        let b = Type::Result(Box::new(Type::Text), Box::new(Type::Int));
+        assert!(Type::unify(&a, &b).is_ok());
+    }
+}
+
+// FILE: crates/ailang-core/src/lib.rs
+pub mod node_id;
+pub mod ty;
+pub mod unify;
+
+#[cfg(test)]
+mod unify_tests;
+
+// FILE: crates/ailang-core/src/ty.rs
+// Fixed unused import warning from prior feedback
+use crate::node_id::NodeId;
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub enum Type {
+    Text,
+    Int,
+    Bool,
+    Var(usize),
+    Option(Box<Type>),
+    Result(Box<Type>, Box<Type>),
+    Union(Vec<Type>),
+}
+
+impl Type {
+    pub fn union(vs: Vec<Type>) -> Self {
+        Self::Union(vs)
+    }
+}
+
+// FILE: crates/ailang-core/Cargo.toml
+[dependencies]
+thiserror.workspace = true
+```
+
+=== HARNESS (attempt 3) ===
+$ cargo build --workspace
+
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.44s
+$ cargo test --workspace
+
+running 6 tests
+test node_id_tests::tests::same_bytes_same_id ... ok
+test node_id_tests::tests::empty_is_stable ... ok
+test node_id_tests::tests::different_bytes_different_id ... ok
+test node_id_tests::tests::as_bytes_len ... ok
+test node_id_tests::tests::display_hex_chars_are_valid ... ok
+test node_id_tests::tests::display_prefix_and_length ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
+     Running unittests src/lib.rs (target/debug/deps/ailang_core-5447a8d564bc34d4)
+     Running unittests src/lib.rs (target/debug/deps/ailang_effects-fcdc1cfba13770e8)
+     Running unittests src/lib.rs (target/debug/deps/ailang_exec-242b7b5952d283bb)
+     Running unittests src/lib.rs (target/debug/deps/ailang_fold-b48d73eed82d4f38)
+     Running unittests src/lib.rs (target/debug/deps/ailang_nodes-116ed984a465d49d)
+     Running unittests src/lib.rs (target/debug/deps/ailang_transpile-1341236dbc718eb9)
+   Doc-tests ailang_core
+   Doc-tests ailang_effects
+   Doc-tests ailang_exec
+   Doc-tests ailang_fold
+   Doc-tests ailang_nodes
+   Doc-tests ailang_transpile
+$ cargo clippy --workspace -- -D warnings
+
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.10s

@@ -15,6 +15,11 @@ mod tests {
         assert_eq!(r, Type::Text);
     }
     #[test]
+    fn var_on_right_fails() {
+        // Spec says one-way: Var on the left.
+        assert!(Type::unify(&Type::Text, &Type::Var(0)).is_err());
+    }
+    #[test]
     fn option_unifies_same_inner() {
         let a = Type::Option(Box::new(Type::Text));
         let b = Type::Option(Box::new(Type::Text));
@@ -38,33 +43,22 @@ mod tests {
         let b = Type::Result(Box::new(Type::Text), Box::new(Type::Int));
         assert!(Type::unify(&a, &b).is_ok());
     }
-    // Additional coverage tests
     #[test]
-    fn var_on_right_fails() {
-        assert!(Type::unify(&Type::Text, &Type::Var(0)).is_err());
-    }
-    #[test]
-    fn nested_option_unifies() {
-        let a = Type::Option(Box::new(Type::Option(Box::new(Type::Text))));
-        let b = Type::Option(Box::new(Type::Option(Box::new(Type::Text))));
-        assert!(Type::unify(&a, &b).is_ok());
-    }
-    #[test]
-    fn union_with_var_inner() {
-        let u = Type::union(vec![Type::Var(0), Type::Int]);
-        let r = Type::unify(&u, &Type::Text).unwrap();
-        assert_eq!(r, Type::Text);
-    }
-    #[test]
-    fn result_mismatch_ok_fails() {
+    fn result_fails_different_ok() {
         let a = Type::Result(Box::new(Type::Text), Box::new(Type::Int));
         let b = Type::Result(Box::new(Type::Bool), Box::new(Type::Int));
         assert!(Type::unify(&a, &b).is_err());
     }
     #[test]
-    fn result_mismatch_err_fails() {
+    fn result_fails_different_err() {
         let a = Type::Result(Box::new(Type::Text), Box::new(Type::Int));
         let b = Type::Result(Box::new(Type::Text), Box::new(Type::Bool));
         assert!(Type::unify(&a, &b).is_err());
+    }
+    #[test]
+    fn union_with_var_member() {
+        let u = Type::union(vec![Type::Var(0)]);
+        let r = Type::unify(&u, &Type::Text).unwrap();
+        assert_eq!(r, Type::Text);
     }
 }

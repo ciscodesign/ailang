@@ -174,3 +174,372 @@ Caused by:
 
 Caused by:
   this virtual manifest specifies a `dependencies` section, which is not allowed
+
+=== GENERATED FILES (attempt 2) ===
+crates/ailang-core/Cargo.toml
+crates/ailang-core/src/lib.rs
+crates/ailang-core/src/node_id.rs
+crates/ailang-core/src/node_id_tests.rs
+
+=== RAW CODE (attempt 2) ===
+```rust
+// FILE: crates/ailang-core/Cargo.toml
+[package]
+name = "ailang-core"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+blake3.workspace = true
+```
+
+```rust
+// FILE: crates/ailang-core/src/lib.rs
+pub mod node_id;
+
+#[cfg(test)]
+mod node_id_tests;
+```
+
+```rust
+// FILE: crates/ailang-core/src/node_id.rs
+use std::fmt;
+use blake3::hash_bytes;
+
+/// Content-addressed identifier for a node.
+///
+/// A `NodeId` is the blake3 hash of a node's canonical byte encoding.
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
+pub struct NodeId([u8; 32]);
+
+impl NodeId {
+    /// Computes the `NodeId` from the canonical bytes of a node.
+    pub fn of(bytes: &[u8]) -> Self {
+        let hash = hash_bytes(bytes);
+        NodeId(*hash.as_bytes())
+    }
+
+    /// Returns the raw 32-byte hash value.
+    pub fn as_bytes(&self) -> &[u8; 32] {
+        &self.0
+    }
+}
+
+impl fmt::Display for NodeId {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "blake3:")?;
+        // First 12 hex characters correspond to the first 6 bytes.
+        for byte in self.0.iter().take(6) {
+            write!(f, "{:02x}", byte)?;
+        }
+        Ok(())
+    }
+}
+```
+
+```rust
+// FILE: crates/ailang-core/src/node_id_tests.rs
+#[cfg(test)]
+mod tests {
+    use crate::node_id::NodeId;
+
+    #[test]
+    fn same_bytes_same_id() {
+        assert_eq!(NodeId::of(b"hello"), NodeId::of(b"hello"));
+    }
+
+    #[test]
+    fn different_bytes_different_id() {
+        assert_ne!(NodeId::of(b"hello"), NodeId::of(b"hellp"));
+    }
+
+    #[test]
+    fn empty_is_stable() {
+        assert_eq!(NodeId::of(b""), NodeId::of(b""));
+    }
+
+    #[test]
+    fn display_prefix_and_length() {
+        let s = format!("{}", NodeId::of(b"x"));
+        assert!(s.starts_with("blake3:"));
+        assert_eq!(s.len(), "blake3:".len() + 12);
+    }
+
+    #[test]
+    fn as_bytes_len() {
+        assert_eq!(NodeId::of(b"abc").as_bytes().len(), 32);
+    }
+
+    #[test]
+    fn display_hex_format() {
+        let id = NodeId::of(b"test");
+        let s = format!("{}", id);
+        // Verify hex characters are valid
+        for c in s.chars().skip("blake3:".len()) {
+            assert!(c.is_ascii_hexdigit());
+        }
+    }
+
+    #[test]
+    fn copy_clone() {
+        let id1 = NodeId::of(b"data");
+        let id2 = id1;
+        let id3 = id1.clone();
+        assert_eq!(id1, id2);
+        assert_eq!(id1, id3);
+    }
+
+    #[test]
+    fn hash_trait() {
+        use std::collections::HashSet;
+        let mut set = HashSet::new();
+        set.insert(NodeId::of(b"key"));
+        assert!(set.contains(&NodeId::of(b"key")));
+        assert!(!set.contains(&NodeId::of(b"value")));
+    }
+}
+```
+
+=== HARNESS (attempt 2) ===
+$ cargo build --workspace
+
+   Compiling ailang-core v0.1.0 (/Users/cisco/Documents/1_Progetti/ailang/crates/ailang-core)
+error[E0432]: unresolved import `blake3::hash_bytes`
+ --> crates/ailang-core/src/node_id.rs:2:5
+  |
+2 | use blake3::hash_bytes;
+  |     ^^^^^^^^^^^^^^^^^^ no `hash_bytes` in the root
+
+For more information about this error, try `rustc --explain E0432`.
+error: could not compile `ailang-core` (lib) due to 1 previous error
+
+=== GENERATED FILES (attempt 3) ===
+crates/ailang-core/src/node_id.rs
+crates/ailang-core/src/node_id_tests.rs
+crates/ailang-core/src/lib.rs
+crates/ailang-core/Cargo.toml
+
+=== RAW CODE (attempt 3) ===
+```rust
+// FILE: crates/ailang-core/src/node_id.rs
+use std::fmt;
+use blake3::hash;
+
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
+pub struct NodeId([u8; 32]);
+
+impl NodeId {
+    pub fn of(bytes: &[u8]) -> Self {
+        let hash_bytes: [u8; 32] = hash(bytes).into();
+        NodeId(hash_bytes)
+    }
+
+    pub fn as_bytes(&self) -> &[u8; 32] {
+        &self.0
+    }
+}
+
+impl fmt::Display for NodeId {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "blake3:")?;
+        for byte in self.0.iter().take(6) {
+            write!(f, "{:02x}", byte)?;
+        }
+        Ok(())
+    }
+}
+```
+
+```rust
+// FILE: crates/ailang-core/src/node_id_tests.rs
+#[cfg(test)]
+mod tests {
+    use crate::node_id::NodeId;
+
+    #[test]
+    fn same_bytes_same_id() {
+        assert_eq!(NodeId::of(b"hello"), NodeId::of(b"hello"));
+    }
+
+    #[test]
+    fn different_bytes_different_id() {
+        assert_ne!(NodeId::of(b"hello"), NodeId::of(b"hellp"));
+    }
+
+    #[test]
+    fn empty_is_stable() {
+        assert_eq!(NodeId::of(b""), NodeId::of(b""));
+    }
+
+    #[test]
+    fn display_prefix_and_length() {
+        let s = format!("{}", NodeId::of(b"x"));
+        assert!(s.starts_with("blake3:"));
+        assert_eq!(s.len(), "blake3:".len() + 12);
+    }
+
+    #[test]
+    fn as_bytes_len() {
+        assert_eq!(NodeId::of(b"abc").as_bytes().len(), 32);
+    }
+
+    #[test]
+    fn display_hex_chars_are_valid() {
+        let s = format!("{}", NodeId::of(b"x"));
+        let hex_part = &s["blake3:".len()..];
+        assert!(hex_part.chars().all(|c| c.is_ascii_hexdigit()));
+    }
+}
+```
+
+```rust
+// FILE: crates/ailang-core/src/lib.rs
+pub mod node_id;
+
+#[cfg(test)]
+mod node_id_tests;
+```
+
+```toml
+// FILE: crates/ailang-core/Cargo.toml
+[package]
+name = "ailang-core"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+blake3.workspace = true
+```
+
+=== HARNESS (attempt 3) ===
+$ cargo build --workspace
+
+    Updating crates.io index
+     Locking 10 packages to latest compatible versions
+      Adding arrayref v0.3.9
+      Adding arrayvec v0.7.6
+      Adding blake3 v1.8.5
+      Adding cc v1.2.63
+      Adding cfg-if v1.0.4
+      Adding constant_time_eq v0.4.2
+      Adding cpufeatures v0.3.0
+      Adding find-msvc-tools v0.1.9
+      Adding libc v0.2.186
+      Adding shlex v2.0.1
+   Compiling ailang-core v0.1.0 (/Users/cisco/Documents/1_Progetti/ailang/crates/ailang-core)
+   Compiling ailang-effects v0.1.0 (/Users/cisco/Documents/1_Progetti/ailang/crates/ailang-effects)
+   Compiling ailang-fold v0.1.0 (/Users/cisco/Documents/1_Progetti/ailang/crates/ailang-fold)
+   Compiling ailang-nodes v0.1.0 (/Users/cisco/Documents/1_Progetti/ailang/crates/ailang-nodes)
+   Compiling ailang-exec v0.1.0 (/Users/cisco/Documents/1_Progetti/ailang/crates/ailang-exec)
+   Compiling ailang-transpile v0.1.0 (/Users/cisco/Documents/1_Progetti/ailang/crates/ailang-transpile)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.04s
+$ cargo test --workspace
+
+running 6 tests
+test node_id_tests::tests::empty_is_stable ... ok
+test node_id_tests::tests::different_bytes_different_id ... ok
+test node_id_tests::tests::display_prefix_and_length ... ok
+test node_id_tests::tests::same_bytes_same_id ... ok
+test node_id_tests::tests::as_bytes_len ... ok
+test node_id_tests::tests::display_hex_chars_are_valid ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+   Compiling ailang-core v0.1.0 (/Users/cisco/Documents/1_Progetti/ailang/crates/ailang-core)
+   Compiling ailang-effects v0.1.0 (/Users/cisco/Documents/1_Progetti/ailang/crates/ailang-effects)
+   Compiling ailang-fold v0.1.0 (/Users/cisco/Documents/1_Progetti/ailang/crates/ailang-fold)
+   Compiling ailang-nodes v0.1.0 (/Users/cisco/Documents/1_Progetti/ailang/crates/ailang-nodes)
+   Compiling ailang-transpile v0.1.0 (/Users/cisco/Documents/1_Progetti/ailang/crates/ailang-transpile)
+   Compiling ailang-exec v0.1.0 (/Users/cisco/Documents/1_Progetti/ailang/crates/ailang-exec)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.61s
+     Running unittests src/lib.rs (target/debug/deps/ailang_core-5447a8d564bc34d4)
+     Running unittests src/lib.rs (target/debug/deps/ailang_effects-fcdc1cfba13770e8)
+     Running unittests src/lib.rs (target/debug/deps/ailang_exec-242b7b5952d283bb)
+     Running unittests src/lib.rs (target/debug/deps/ailang_fold-b48d73eed82d4f38)
+     Running unittests src/lib.rs (target/debug/deps/ailang_nodes-116ed984a465d49d)
+     Running unittests src/lib.rs (target/debug/deps/ailang_transpile-1341236dbc718eb9)
+   Doc-tests ailang_core
+   Doc-tests ailang_effects
+   Doc-tests ailang_exec
+   Doc-tests ailang_fold
+   Doc-tests ailang_nodes
+   Doc-tests ailang_transpile
+$ cargo clippy --workspace -- -D warnings
+
+    Checking ailang-core v0.1.0 (/Users/cisco/Documents/1_Progetti/ailang/crates/ailang-core)
+    Checking ailang-effects v0.1.0 (/Users/cisco/Documents/1_Progetti/ailang/crates/ailang-effects)
+    Checking ailang-fold v0.1.0 (/Users/cisco/Documents/1_Progetti/ailang/crates/ailang-fold)
+    Checking ailang-nodes v0.1.0 (/Users/cisco/Documents/1_Progetti/ailang/crates/ailang-nodes)
+    Checking ailang-transpile v0.1.0 (/Users/cisco/Documents/1_Progetti/ailang/crates/ailang-transpile)
+    Checking ailang-exec v0.1.0 (/Users/cisco/Documents/1_Progetti/ailang/crates/ailang-exec)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.31s
+
+=== REVIEW (attempt 3) ===
+APPROVED
+
+The implementation meets all requirements:
+- No hidden effects: Blake3 hashing uses only pure functions and no external capabilities are leveraged without being declared in the type.
+- Effect ordering: The single effectful operation (hashing) has explicit sequencing via `write!`.
+- No unsafe: None used, as required by constraints.
+- Total handling: All operations are fallible-safe with proper error propagation. No unwrap/expect found on public API.
+- Spec compliance: Matches the interface exactly and includes all necessary derives/methods.
+- Test quality: Acceptance tests cover core functionality (same/different inputs) and formatting requirements, though not exhaustive for every possible input difference.
+- Clippy hygiene: No dead code or unused imports. All lints are addressed.
+
+The extra test `display_hex_chars_are_valid` is acceptable as it improves confidence without violating any constraints.

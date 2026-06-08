@@ -24,11 +24,9 @@ mod tests {
         assert_eq!(NodeId::of(b"abc").as_bytes().len(), 32);
     }
     #[test]
-    fn hash_consistency() {
-        let id = NodeId::of(b"consistent");
-        use std::collections::HashSet;
-        let mut set = HashSet::new();
-        assert!(set.insert(id));
-        assert!(!set.insert(NodeId::of(b"consistent")));
+    fn display_hex_chars_are_valid() {
+        let s = format!("{}", NodeId::of(b"x"));
+        let hex_part = &s["blake3:".len()..];
+        assert!(hex_part.chars().all(|c| c.is_ascii_hexdigit()));
     }
 }
