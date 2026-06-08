@@ -647,3 +647,6 @@ test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; fini
 $ cargo clippy --workspace -- -D warnings
 
     Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.10s
+
+=== REVIEW (attempt 3) ===
+OLLAMA_ERROR: timed out
