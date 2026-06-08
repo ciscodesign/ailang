@@ -1,15 +1,15 @@
 # ailang — Project State
 
-Last activity: 2026-06-08 - Phase 0 COMPLETE — all 7 tasks done, 37 tests passing
+Last activity: 2026-06-08 - Phase 1 COMPLETE — all 11 tasks done, 50 tests passing
 
 ---
 
 ## Current Phase
 
-**Phase 0 — Foundation**
-Status: In Progress
+**Phase 1 — Execution Layer**
+Status: COMPLETE
 
-### Completed — Phase 0
+### Completed — Phase 0 (Foundation)
 - 0001: NodeId (blake3 content-addressed, Ord/PartialOrd, serde hex)
 - 0002: Type enum (Text, Int, Float, Bool, Bytes, Option, Result, Var, Union, Fold) + serde
 - 0003: Type::unify (one-way static edge-legality check)
@@ -18,8 +18,14 @@ Status: In Progress
 - 0006: NodeDef.effects: EffectSet, Graph::total_effects()
 - 0007: serial::encode/decode (canonical JSON, round-trip)
 
+### Completed — Phase 1 (Execution Layer)
+- 0008: Value enum (runtime data: Text/Int/Float/Bool/Bytes/Option/Result + matches_type)
+- 0009: NodeRegistry (kind → ExecFn dispatch, register_const helper)
+- 0010: eval (Kahn topological sort, executes graph, passes outputs as inputs)
+- 0011: codegen (emit Rust source from Graph: Const:* → todo!, Code:<expr> → expr)
+
 ### Test count
-37 tests passing (33 ailang-core + 4 ailang-effects)
+50 tests passing (33 ailang-core + 4 ailang-effects + 10 ailang-exec + 3 ailang-transpile)
 
 ---
 
