@@ -20,13 +20,11 @@ impl Type {
                 let err = Self::unify(ea, eb)?;
                 Ok(Type::Result(Box::new(ok), Box::new(err)))
             }
-            (Type::Union(variants), t) => {
-                variants
-                    .iter()
-                    .find(|v| Self::unify(v, t).is_ok())
-                    .map(|_| t.clone())
-                    .ok_or_else(|| UnifyError::Mismatch(a.clone(), b.clone()))
-            }
+            (Type::Union(variants), t) => variants
+                .iter()
+                .find(|v| Self::unify(v, t).is_ok())
+                .map(|_| t.clone())
+                .ok_or_else(|| UnifyError::Mismatch(a.clone(), b.clone())),
             _ => Err(UnifyError::Mismatch(a.clone(), b.clone())),
         }
     }
