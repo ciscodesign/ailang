@@ -1,6 +1,6 @@
 # ailang — Project State
 
-Last activity: 2026-06-08 - Phase 0 tasks 0001-0004 complete, 28 tests passing
+Last activity: 2026-06-08 - Phase 0 COMPLETE — all 7 tasks done, 37 tests passing
 
 ---
 
@@ -9,19 +9,17 @@ Last activity: 2026-06-08 - Phase 0 tasks 0001-0004 complete, 28 tests passing
 **Phase 0 — Foundation**
 Status: In Progress
 
-### Completed
-- 0001: NodeId (blake3, Ord/PartialOrd)
-- 0002: Type enum (Text, Int, Float, Bool, Bytes, Option, Result, Var, Union, Fold)
-- 0003: Type::unify (one-way, static edge-legality check)
+### Completed — Phase 0
+- 0001: NodeId (blake3 content-addressed, Ord/PartialOrd, serde hex)
+- 0002: Type enum (Text, Int, Float, Bool, Bytes, Option, Result, Var, Union, Fold) + serde
+- 0003: Type::unify (one-way static edge-legality check)
 - 0004: Graph (NodeDef, PortDef, Edge, GraphError, add_edge with unify)
-
-### In Progress
-- 0005: EffectSet + CapToken
-- 0006: Node effects
-- 0007: Serialization
+- 0005: EffectSet + CapToken (ailang-effects crate)
+- 0006: NodeDef.effects: EffectSet, Graph::total_effects()
+- 0007: serial::encode/decode (canonical JSON, round-trip)
 
 ### Test count
-28 tests passing (ailang-core)
+37 tests passing (33 ailang-core + 4 ailang-effects)
 
 ---
 
