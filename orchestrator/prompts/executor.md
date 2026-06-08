@@ -71,7 +71,7 @@ impl Type {
 pub type NodeIdx = usize;
 pub type PortIdx = usize;
 pub struct PortDef { pub name: String, pub ty: Type }
-pub struct NodeDef { pub id: NodeId, pub kind: String, pub inputs: Vec<PortDef>, pub outputs: Vec<PortDef> }
+pub struct NodeDef { pub id: NodeId, pub kind: String, pub inputs: Vec<PortDef>, pub outputs: Vec<PortDef>, pub effects: EffectSet }
 pub struct Edge { pub src_node: NodeIdx, pub src_port: PortIdx, pub dst_node: NodeIdx, pub dst_port: PortIdx, pub ty: Type }
 pub enum GraphError { NoSuchNode(NodeIdx), NoSuchPort(PortIdx, NodeIdx), TypeMismatch(#[from] UnifyError) }
 #[derive(Default)]
@@ -82,6 +82,7 @@ impl Graph {
     pub fn add_edge(&mut self, src_node: NodeIdx, src_port: PortIdx, dst_node: NodeIdx, dst_port: PortIdx) -> Result<(), GraphError>;
     pub fn nodes(&self) -> &[NodeDef];
     pub fn edges(&self) -> &[Edge];
+    pub fn total_effects(&self) -> EffectSet;
 }
 ```
 
@@ -101,6 +102,58 @@ impl CapToken { pub fn new(effect: Effect) -> Self; pub fn next(self) -> Self; }
 
 There is no `TypeEnum`. There is no `Type::option()` or `Type::result()` constructor.
 Use `Type::Option(Box::new(t))` and `Type::Result(Box::new(ok), Box::new(err))` directly.
+
+```rust
+// crates/ailang-core/src/serial.rs
+pub fn encode(graph: &Graph) -> Result<Vec<u8>, SerialError>;
+pub fn decode(bytes: &[u8]) -> Result<Graph, SerialError>;
+```
+
+```rust
+// crates/ailang-exec/src/value.rs
+#[derive(Clone, Debug, PartialEq)]
+pub enum Value {
+    Text(String), Int(i64), Float(f64), Bool(bool), Bytes(Vec<u8>),
+    Option(Option<Box<Value>>),
+    Result(std::result::Result<Box<Value>, Box<Value>>),
+}
+impl Value {
+    pub fn matches_type(&self, ty: &Type) -> bool;
+}
+
+// crates/ailang-exec/src/registry.rs
+pub type Inputs  = HashMap<String, Value>;
+pub type Outputs = HashMap<String, Value>;
+#[derive(Debug, thiserror::Error)]
+pub enum ExecError {
+    #[error("unknown node kind: {0}")]  UnknownKind(String),
+    #[error("missing input: {0}")]      MissingInput(String),
+    #[error("execution failed: {0}")]   Failed(String),
+}
+pub type ExecFn = Box<dyn Fn(Inputs) -> Result<Outputs, ExecError> + Send + Sync>;
+pub struct NodeRegistry { /* private */ }
+impl NodeRegistry {
+    pub fn new() -> Self;
+    pub fn register(&mut self, kind: impl Into<String>, f: ExecFn);
+    pub fn call(&self, kind: &str, inputs: Inputs) -> Result<Outputs, ExecError>;
+    pub fn register_const(&mut self, port_name: impl Into<String>, value: Value);
+}
+
+// crates/ailang-exec/src/eval.rs
+pub type EvalResult = HashMap<NodeIdx, HashMap<String, Value>>;
+#[derive(Debug, thiserror::Error)]
+pub enum EvalError {
+    #[error("cycle detected in graph")]         Cycle,
+    #[error("node {0}: {1}")]                   NodeFailed(NodeIdx, ExecError),
+    #[error("missing output for edge from node {0} port {1}")] MissingOutput(NodeIdx, usize),
+}
+pub fn eval(graph: &Graph, registry: &NodeRegistry) -> Result<EvalResult, EvalError>;
+
+// crates/ailang-transpile/src/codegen.rs
+#[derive(Debug, thiserror::Error)]
+pub enum CodegenError { #[error("cycle detected")] Cycle }
+pub fn codegen(graph: &Graph, fn_name: &str) -> Result<String, CodegenError>;
+```
 
 ## On retry
 If prior feedback is provided, fix exactly that. Do not regress passing behaviour.
