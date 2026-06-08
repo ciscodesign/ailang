@@ -26,7 +26,6 @@ impl Type {
 impl Ord for Type {
     fn cmp(&self, other: &Self) -> Ordering {
         use std::fmt::Debug;
-        use std::fmt::Formatter;
         struct DebugWrapper<'a>(&'a dyn Debug);
         impl PartialEq for DebugWrapper<'_> {
             fn eq(&self, other: &Self) -> bool {
