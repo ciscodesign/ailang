@@ -30,5 +30,63 @@ Tests in separate `*_tests.rs` files must be declared as `#[cfg(test)] mod name_
 in `lib.rs` — otherwise `cargo test` never sees them. A task whose tests don't run has
 failed, even if the build passes.
 
+## Existing public API — use exactly as shown, do not invent new types or methods
+
+```rust
+// crates/ailang-core/src/node_id.rs
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+pub struct NodeId([u8; 32]);
+impl NodeId {
+    pub fn of(bytes: &[u8]) -> Self;
+    pub fn as_bytes(&self) -> &[u8; 32];
+}
+impl fmt::Display for NodeId { ... }
+
+// crates/ailang-core/src/ty.rs
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+pub enum Type {
+    Text,
+    Int,
+    Float,
+    Bool,
+    Bytes,
+    Option(Box<Type>),
+    Result(Box<Type>, Box<Type>),  // (ok, err)
+    Var(u32),
+    Union(Vec<Type>),
+    Fold(NodeId),
+}
+impl Type {
+    pub fn union(types: Vec<Type>) -> Type;  // deduplicates and sorts
+}
+
+// crates/ailang-core/src/unify.rs
+pub enum UnifyError { Mismatch(Type, Type) }
+impl Type {
+    pub fn unify(a: &Type, b: &Type) -> Result<Type, UnifyError>;
+}
+```
+
+// crates/ailang-core/src/graph.rs
+pub type NodeIdx = usize;
+pub type PortIdx = usize;
+pub struct PortDef { pub name: String, pub ty: Type }
+pub struct NodeDef { pub id: NodeId, pub kind: String, pub inputs: Vec<PortDef>, pub outputs: Vec<PortDef> }
+pub struct Edge { pub src_node: NodeIdx, pub src_port: PortIdx, pub dst_node: NodeIdx, pub dst_port: PortIdx, pub ty: Type }
+pub enum GraphError { NoSuchNode(NodeIdx), NoSuchPort(PortIdx, NodeIdx), TypeMismatch(#[from] UnifyError) }
+#[derive(Default)]
+pub struct Graph { /* nodes: Vec<NodeDef>, edges: Vec<Edge> — private */ }
+impl Graph {
+    pub fn new() -> Self;
+    pub fn add_node(&mut self, node: NodeDef) -> NodeIdx;
+    pub fn add_edge(&mut self, src_node: NodeIdx, src_port: PortIdx, dst_node: NodeIdx, dst_port: PortIdx) -> Result<(), GraphError>;
+    pub fn nodes(&self) -> &[NodeDef];
+    pub fn edges(&self) -> &[Edge];
+}
+```
+
+There is no `TypeEnum`. There is no `Type::option()` or `Type::result()` constructor.
+Use `Type::Option(Box::new(t))` and `Type::Result(Box::new(ok), Box::new(err))` directly.
+
 ## On retry
 If prior feedback is provided, fix exactly that. Do not regress passing behaviour.
