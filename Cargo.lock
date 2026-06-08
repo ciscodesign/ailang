@@ -6,7 +6,11 @@ version = 4
 name = "ailang-core"
 version = "0.1.0"
 dependencies = [
+ "ailang-effects",
  "blake3",
+ "hex",
+ "serde",
+ "serde_json",
  "thiserror",
 ]
 
@@ -14,7 +18,6 @@ dependencies = [
 name = "ailang-effects"
 version = "0.1.0"
 dependencies = [
- "ailang-core",
  "thiserror",
 ]
 
@@ -23,12 +26,6 @@ name = "ailang-exec"
 version = "0.1.0"
 dependencies = [
  "ailang-core",
- "ailang-effects",
- "ailang-fold",
- "ailang-nodes",
- "anyhow",
- "serde",
- "serde_json",
  "thiserror",
 ]
 
@@ -128,6 +125,12 @@ name = "find-msvc-tools"
 version = "0.1.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5baebc0774151f905a1a2cc41989300b1e6fbb29aff0ceffa1064fdd3088d582"
+
+[[package]]
+name = "hex"
+version = "0.4.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7f24254aa9a54b5c858eaee2f5bccdb46aaf0e486a595ed5fd8f86ba55232a70"
 
 [[package]]
 name = "itoa"
