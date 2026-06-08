@@ -216,6 +216,8 @@ def main():
     ap = argparse.ArgumentParser(description="ailang orchestrator")
     ap.add_argument("task", nargs="?", help="single task file to run (default: all in tasks/)")
     ap.add_argument("--dry-run", action="store_true", help="print tasks without running")
+    ap.add_argument("--best-effort", action="store_true",
+                    help="skip failed tasks and continue (unattended mode)")
     args = ap.parse_args()
 
     if args.task:
@@ -227,17 +229,29 @@ def main():
         print("No tasks found in", TASKS_DIR)
         sys.exit(1)
 
-    print(f"ailang orchestrator — {len(tasks)} task(s)")
+    print(f"ailang orchestrator — {len(tasks)} task(s)"
+          + (" [best-effort]" if args.best_effort else ""))
     for t in tasks:
         print(f"  {t.name}")
 
     if args.dry_run:
         sys.exit(0)
 
+    failed = []
     for task in tasks:
         if not run_task(task):
-            print(f"\nStopping for human review — fix or split: {task.name}")
-            sys.exit(1)
+            if args.best_effort:
+                print(f"\n  ⚠ skipping {task.name} — continuing in best-effort mode")
+                failed.append(task.name)
+            else:
+                print(f"\nStopping for human review — fix or split: {task.name}")
+                sys.exit(1)
+
+    if failed:
+        print(f"\nAll tasks attempted. {len(failed)} failed (needs human review):")
+        for name in failed:
+            print(f"  ✗ {name}")
+        sys.exit(1)
 
     print("\nAll tasks complete.")
 
