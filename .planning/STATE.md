@@ -1,12 +1,12 @@
 # ailang — Project State
 
-Last activity: 2026-06-09 - Phase 3 COMPLETE — all 4 tasks done, 81 tests passing
+Last activity: 2026-06-09 - Phase 4 COMPLETE — all 4 tasks done, 99 tests passing
 
 ---
 
 ## Current Phase
 
-**Phase 3 — Extended Codegen & Validation**
+**Phase 4 — Lists, Fold Passes & File I/O**
 Status: COMPLETE
 
 ### Completed — Phase 0 (Foundation)
@@ -36,8 +36,14 @@ Status: COMPLETE
 - 0018: more-builtins (eq_int, lt_int, if_int, len_text added to register_builtins)
 - 0019: wasm-emit (codegen_wasm: #[no_mangle] extern "C" fn, return type from last output node)
 
+### Completed — Phase 4 (Lists, Fold Passes & File I/O)
+- 0020: list-type (Type::List(Box<Type>) + Value::List(Vec<Value>), unify + matches_type)
+- 0021: list-builtins (list_empty, list_push, list_head, list_tail, list_len, list_int_sum)
+- 0022: graph-passes (ailang-fold: dead_nodes() — backward BFS liveness from sinks)
+- 0023: graph-file-io (CLI save/load subcommands, value_to_json handles List)
+
 ### Test count
-81 tests passing (44 ailang-core + 4 ailang-effects + 10 ailang-exec + 5 ailang-transpile + 16 ailang-nodes + 2 ailang-cli)
+99 tests passing (47 ailang-core + 4 ailang-effects + 12 ailang-exec + 5 ailang-fold + 5 ailang-transpile + 23 ailang-nodes + 3 ailang-cli)
 
 ---
 
@@ -55,4 +61,5 @@ Status: COMPLETE
 | 260608-f5y | Fix lib.rs module collision after task-0004 executor overwrite (28 tests restored) | 2026-06-08 | 1e04ea4 | 260608-f5y-fix-orchestrator-file-corruption-and-ens |
 | 260608-lon | Implement 0012-builtin-nodes manually (fix double-??, mut inputs, HashMap construction) | 2026-06-08 | 98ac264 | 260608-lon-implement-0012-builtin-nodes-fix-broken- |
 | 260609-ele | Implement Phase 2 tasks 0013-0015 manually (codegen wiring, graph builder, CLI binary) | 2026-06-09 | 7e888e7 | 260609-ele-implement-ailang-phase-2-tasks-0013-0015 |
-| 260609-fdw | Implement Phase 3 tasks 0016-0019 manually (const literals, graph validator, more builtins, wasm emit) | 2026-06-09 | pending | 260609-fdw-implement-phase-3-tasks-0016-0019 |
+| 260609-fdw | Implement Phase 3 tasks 0016-0019 manually (const literals, graph validator, more builtins, wasm emit) | 2026-06-09 | ca5238a | 260609-fdw-implement-phase-3-tasks-0016-0019 |
+| 260609-p4 | Implement Phase 4 tasks 0020-0023 (List type/value, list builtins, dead-node fold pass, CLI file I/O) | 2026-06-09 | b388747 | inline |
