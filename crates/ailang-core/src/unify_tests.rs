@@ -81,4 +81,16 @@ mod tests {
         let r = Type::unify(&u, &Type::Text).unwrap();
         assert_eq!(r, Type::Text);
     }
+    #[test]
+    fn list_same_inner_unifies() {
+        let a = Type::List(Box::new(Type::Int));
+        let b = Type::List(Box::new(Type::Int));
+        assert!(Type::unify(&a, &b).is_ok());
+    }
+    #[test]
+    fn list_different_inner_fails() {
+        let a = Type::List(Box::new(Type::Int));
+        let b = Type::List(Box::new(Type::Text));
+        assert!(Type::unify(&a, &b).is_err());
+    }
 }

@@ -20,6 +20,9 @@ impl Type {
                 let err = Self::unify(ea, eb)?;
                 Ok(Type::Result(Box::new(ok), Box::new(err)))
             }
+            (Type::List(ia), Type::List(ib)) => {
+                Self::unify(ia, ib).map(|t| Type::List(Box::new(t)))
+            }
             (Type::Union(variants), t) => variants
                 .iter()
                 .find(|v| Self::unify(v, t).is_ok())

@@ -134,4 +134,64 @@ pub fn register_builtins(registry: &mut NodeRegistry) {
             _ => Err(ExecError::Failed("len_text: expected Text input".into())),
         }
     }));
+
+    registry.register("list_empty", Box::new(|_inputs: Inputs| -> Result<Outputs, ExecError> {
+        Ok(HashMap::from([("out".into(), Value::List(vec![]))]))
+    }));
+
+    registry.register("list_push", Box::new(|mut inputs: Inputs| -> Result<Outputs, ExecError> {
+        let list = inputs.remove("list").ok_or_else(|| ExecError::MissingInput("list".into()))?;
+        let item = inputs.remove("item").ok_or_else(|| ExecError::MissingInput("item".into()))?;
+        match list {
+            Value::List(mut v) => { v.push(item); Ok(HashMap::from([("out".into(), Value::List(v))])) }
+            _ => Err(ExecError::Failed("list_push: expected List".into())),
+        }
+    }));
+
+    registry.register("list_head", Box::new(|mut inputs: Inputs| -> Result<Outputs, ExecError> {
+        let list = inputs.remove("list").ok_or_else(|| ExecError::MissingInput("list".into()))?;
+        match list {
+            Value::List(v) => {
+                let head = v.into_iter().next().map(Box::new);
+                Ok(HashMap::from([("out".into(), Value::Option(head))]))
+            }
+            _ => Err(ExecError::Failed("list_head: expected List".into())),
+        }
+    }));
+
+    registry.register("list_tail", Box::new(|mut inputs: Inputs| -> Result<Outputs, ExecError> {
+        let list = inputs.remove("list").ok_or_else(|| ExecError::MissingInput("list".into()))?;
+        match list {
+            Value::List(mut v) => {
+                if !v.is_empty() { v.remove(0); }
+                Ok(HashMap::from([("out".into(), Value::List(v))]))
+            }
+            _ => Err(ExecError::Failed("list_tail: expected List".into())),
+        }
+    }));
+
+    registry.register("list_len", Box::new(|mut inputs: Inputs| -> Result<Outputs, ExecError> {
+        let list = inputs.remove("list").ok_or_else(|| ExecError::MissingInput("list".into()))?;
+        match list {
+            Value::List(v) => Ok(HashMap::from([("out".into(), Value::Int(v.len() as i64))])),
+            _ => Err(ExecError::Failed("list_len: expected List".into())),
+        }
+    }));
+
+    registry.register("list_int_sum", Box::new(|mut inputs: Inputs| -> Result<Outputs, ExecError> {
+        let list = inputs.remove("list").ok_or_else(|| ExecError::MissingInput("list".into()))?;
+        match list {
+            Value::List(v) => {
+                let mut sum = 0i64;
+                for item in v {
+                    match item {
+                        Value::Int(n) => sum += n,
+                        _ => return Err(ExecError::Failed("list_int_sum: non-Int item".into())),
+                    }
+                }
+                Ok(HashMap::from([("out".into(), Value::Int(sum))]))
+            }
+            _ => Err(ExecError::Failed("list_int_sum: expected List".into())),
+        }
+    }));
 }

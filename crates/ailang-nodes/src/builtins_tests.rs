@@ -146,4 +146,62 @@ mod tests {
         let out = r.call("len_text", inputs).unwrap();
         assert_eq!(out["out"], Value::Int(5));
     }
+
+    #[test]
+    fn list_empty_returns_empty() {
+        let r = reg();
+        let out = r.call("list_empty", HashMap::new()).unwrap();
+        assert_eq!(out["out"], Value::List(vec![]));
+    }
+
+    #[test]
+    fn list_push_appends() {
+        let r = reg();
+        let inputs = HashMap::from([
+            ("list".into(), Value::List(vec![Value::Int(1)])),
+            ("item".into(), Value::Int(2)),
+        ]);
+        let out = r.call("list_push", inputs).unwrap();
+        assert_eq!(out["out"], Value::List(vec![Value::Int(1), Value::Int(2)]));
+    }
+
+    #[test]
+    fn list_head_some() {
+        let r = reg();
+        let inputs = HashMap::from([("list".into(), Value::List(vec![Value::Int(42), Value::Int(7)]))]);
+        let out = r.call("list_head", inputs).unwrap();
+        assert_eq!(out["out"], Value::Option(Some(Box::new(Value::Int(42)))));
+    }
+
+    #[test]
+    fn list_head_empty() {
+        let r = reg();
+        let inputs = HashMap::from([("list".into(), Value::List(vec![]))]);
+        let out = r.call("list_head", inputs).unwrap();
+        assert_eq!(out["out"], Value::Option(None));
+    }
+
+    #[test]
+    fn list_tail_removes_first() {
+        let r = reg();
+        let inputs = HashMap::from([("list".into(), Value::List(vec![Value::Int(1), Value::Int(2), Value::Int(3)]))]);
+        let out = r.call("list_tail", inputs).unwrap();
+        assert_eq!(out["out"], Value::List(vec![Value::Int(2), Value::Int(3)]));
+    }
+
+    #[test]
+    fn list_len() {
+        let r = reg();
+        let inputs = HashMap::from([("list".into(), Value::List(vec![Value::Int(1), Value::Int(2)]))]);
+        let out = r.call("list_len", inputs).unwrap();
+        assert_eq!(out["out"], Value::Int(2));
+    }
+
+    #[test]
+    fn list_int_sum() {
+        let r = reg();
+        let inputs = HashMap::from([("list".into(), Value::List(vec![Value::Int(10), Value::Int(20), Value::Int(5)]))]);
+        let out = r.call("list_int_sum", inputs).unwrap();
+        assert_eq!(out["out"], Value::Int(35));
+    }
 }

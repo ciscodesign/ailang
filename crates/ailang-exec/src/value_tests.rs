@@ -23,4 +23,12 @@ mod tests {
         let v = Value::Result(Ok(Box::new(Value::Int(1))));
         assert!(v.matches_type(&Type::Result(Box::new(Type::Int), Box::new(Type::Text))));
     }
+    #[test]
+    fn list_matches_list_type() {
+        assert!(Value::List(vec![Value::Int(1)]).matches_type(&Type::List(Box::new(Type::Int))));
+    }
+    #[test]
+    fn list_does_not_match_int() {
+        assert!(!Value::List(vec![]).matches_type(&Type::Int));
+    }
 }

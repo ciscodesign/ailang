@@ -13,6 +13,7 @@ pub enum Type {
     Var(u32),
     Union(Vec<Type>),
     Fold(NodeId),
+    List(Box<Type>),
 }
 
 impl Type {

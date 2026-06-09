@@ -30,4 +30,9 @@ mod tests {
         assert_ne!(Type::Var(0), Type::Var(1));
         assert_eq!(Type::Var(0), Type::Var(0));
     }
+    #[test]
+    fn list_type_distinct() {
+        assert_ne!(Type::List(Box::new(Type::Int)), Type::List(Box::new(Type::Text)));
+        assert_eq!(Type::List(Box::new(Type::Int)), Type::List(Box::new(Type::Int)));
+    }
 }
