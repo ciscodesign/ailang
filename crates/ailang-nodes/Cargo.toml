@@ -1,9 +1,6 @@
 [package]
-name    = "ailang-nodes"
+name = "ailang-nodes"
 version.workspace = true
 edition.workspace = true
-
 [dependencies]
-ailang-core    = { path = "../ailang-core" }
-ailang-effects = { path = "../ailang-effects" }
-thiserror.workspace = true
+ailang-exec = { path = "../ailang-exec" }

@@ -7,13 +7,12 @@ members = [
     "crates/ailang-fold",
     "crates/ailang-exec",
     "crates/ailang-transpile",
+    "crates/ailang-cli",
 ]
-
 [workspace.package]
 version = "0.1.0"
 edition = "2021"
 license = "TBD"
-
 [workspace.dependencies]
 blake3       = "1"
 serde        = { version = "1", features = ["derive"] }
