@@ -2,8 +2,31 @@ use std::collections::HashMap;
 use ailang_exec::registry::{ExecError, Inputs, NodeRegistry, Outputs};
 use ailang_exec::value::Value;
 
+pub fn register_const_literal(registry: &mut NodeRegistry, kind: &str) {
+    let rest = kind.strip_prefix("Const:").unwrap_or(kind);
+    let (port, literal) = match rest.find(':') {
+        Some(pos) => (&rest[..pos], &rest[pos + 1..]),
+        None => return,
+    };
+    let port_owned = port.to_string();
+    let kind_owned = kind.to_string();
+    let value: Value = if let Ok(n) = literal.parse::<i64>() {
+        Value::Int(n)
+    } else if let Ok(f) = literal.parse::<f64>() {
+        Value::Float(f)
+    } else if literal == "true" {
+        Value::Bool(true)
+    } else if literal == "false" {
+        Value::Bool(false)
+    } else {
+        Value::Text(literal.to_string())
+    };
+    registry.register(kind_owned, Box::new(move |_inputs: Inputs| {
+        Ok(HashMap::from([(port_owned.clone(), value.clone())]))
+    }));
+}
+
 pub fn register_builtins(registry: &mut NodeRegistry) {
-    // add_int: a + b
     registry.register("add_int", Box::new(|mut inputs: Inputs| -> Result<Outputs, ExecError> {
         let a = inputs.remove("a").ok_or_else(|| ExecError::MissingInput("a".into()))?;
         let b = inputs.remove("b").ok_or_else(|| ExecError::MissingInput("b".into()))?;
@@ -13,7 +36,6 @@ pub fn register_builtins(registry: &mut NodeRegistry) {
         }
     }));
 
-    // sub_int: a - b
     registry.register("sub_int", Box::new(|mut inputs: Inputs| -> Result<Outputs, ExecError> {
         let a = inputs.remove("a").ok_or_else(|| ExecError::MissingInput("a".into()))?;
         let b = inputs.remove("b").ok_or_else(|| ExecError::MissingInput("b".into()))?;
@@ -23,7 +45,6 @@ pub fn register_builtins(registry: &mut NodeRegistry) {
         }
     }));
 
-    // mul_int: a * b
     registry.register("mul_int", Box::new(|mut inputs: Inputs| -> Result<Outputs, ExecError> {
         let a = inputs.remove("a").ok_or_else(|| ExecError::MissingInput("a".into()))?;
         let b = inputs.remove("b").ok_or_else(|| ExecError::MissingInput("b".into()))?;
@@ -33,16 +54,15 @@ pub fn register_builtins(registry: &mut NodeRegistry) {
         }
     }));
 
-    // neg_int: -a
-    registry.register("neg_int", Box::new(|mut inputs: Inputs| -> Result<Outputs, ExecError> {
+    registry.register("add_float", Box::new(|mut inputs: Inputs| -> Result<Outputs, ExecError> {
         let a = inputs.remove("a").ok_or_else(|| ExecError::MissingInput("a".into()))?;
-        match a {
-            Value::Int(x) => Ok(HashMap::from([("out".into(), Value::Int(-x))])),
-            _ => Err(ExecError::Failed("neg_int: expected Int input".into())),
+        let b = inputs.remove("b").ok_or_else(|| ExecError::MissingInput("b".into()))?;
+        match (a, b) {
+            (Value::Float(x), Value::Float(y)) => Ok(HashMap::from([("out".into(), Value::Float(x + y))])),
+            _ => Err(ExecError::Failed("add_float: expected Float inputs".into())),
         }
     }));
 
-    // concat_text: a ++ b
     registry.register("concat_text", Box::new(|mut inputs: Inputs| -> Result<Outputs, ExecError> {
         let a = inputs.remove("a").ok_or_else(|| ExecError::MissingInput("a".into()))?;
         let b = inputs.remove("b").ok_or_else(|| ExecError::MissingInput("b".into()))?;
@@ -52,16 +72,14 @@ pub fn register_builtins(registry: &mut NodeRegistry) {
         }
     }));
 
-    // not_bool: !a
     registry.register("not_bool", Box::new(|mut inputs: Inputs| -> Result<Outputs, ExecError> {
         let a = inputs.remove("a").ok_or_else(|| ExecError::MissingInput("a".into()))?;
         match a {
-            Value::Bool(x) => Ok(HashMap::from([("out".into(), Value::Bool(!x))])),
+            Value::Bool(b) => Ok(HashMap::from([("out".into(), Value::Bool(!b))])),
             _ => Err(ExecError::Failed("not_bool: expected Bool input".into())),
         }
     }));
 
-    // and_bool: a && b
     registry.register("and_bool", Box::new(|mut inputs: Inputs| -> Result<Outputs, ExecError> {
         let a = inputs.remove("a").ok_or_else(|| ExecError::MissingInput("a".into()))?;
         let b = inputs.remove("b").ok_or_else(|| ExecError::MissingInput("b".into()))?;
@@ -71,13 +89,49 @@ pub fn register_builtins(registry: &mut NodeRegistry) {
         }
     }));
 
-    // or_bool: a || b
     registry.register("or_bool", Box::new(|mut inputs: Inputs| -> Result<Outputs, ExecError> {
         let a = inputs.remove("a").ok_or_else(|| ExecError::MissingInput("a".into()))?;
         let b = inputs.remove("b").ok_or_else(|| ExecError::MissingInput("b".into()))?;
         match (a, b) {
             (Value::Bool(x), Value::Bool(y)) => Ok(HashMap::from([("out".into(), Value::Bool(x || y))])),
             _ => Err(ExecError::Failed("or_bool: expected Bool inputs".into())),
+        }
+    }));
+
+    registry.register("eq_int", Box::new(|mut inputs: Inputs| -> Result<Outputs, ExecError> {
+        let a = inputs.remove("a").ok_or_else(|| ExecError::MissingInput("a".into()))?;
+        let b = inputs.remove("b").ok_or_else(|| ExecError::MissingInput("b".into()))?;
+        match (a, b) {
+            (Value::Int(x), Value::Int(y)) => Ok(HashMap::from([("out".into(), Value::Bool(x == y))])),
+            _ => Err(ExecError::Failed("eq_int: expected Int inputs".into())),
+        }
+    }));
+
+    registry.register("lt_int", Box::new(|mut inputs: Inputs| -> Result<Outputs, ExecError> {
+        let a = inputs.remove("a").ok_or_else(|| ExecError::MissingInput("a".into()))?;
+        let b = inputs.remove("b").ok_or_else(|| ExecError::MissingInput("b".into()))?;
+        match (a, b) {
+            (Value::Int(x), Value::Int(y)) => Ok(HashMap::from([("out".into(), Value::Bool(x < y))])),
+            _ => Err(ExecError::Failed("lt_int: expected Int inputs".into())),
+        }
+    }));
+
+    registry.register("if_int", Box::new(|mut inputs: Inputs| -> Result<Outputs, ExecError> {
+        let cond  = inputs.remove("cond") .ok_or_else(|| ExecError::MissingInput("cond".into()))?;
+        let then  = inputs.remove("then") .ok_or_else(|| ExecError::MissingInput("then".into()))?;
+        let else_ = inputs.remove("else_").ok_or_else(|| ExecError::MissingInput("else_".into()))?;
+        match (cond, then, else_) {
+            (Value::Bool(c), Value::Int(t), Value::Int(e)) =>
+                Ok(HashMap::from([("out".into(), Value::Int(if c { t } else { e }))])),
+            _ => Err(ExecError::Failed("if_int: type mismatch".into())),
+        }
+    }));
+
+    registry.register("len_text", Box::new(|mut inputs: Inputs| -> Result<Outputs, ExecError> {
+        let a = inputs.remove("a").ok_or_else(|| ExecError::MissingInput("a".into()))?;
+        match a {
+            Value::Text(s) => Ok(HashMap::from([("out".into(), Value::Int(s.len() as i64))])),
+            _ => Err(ExecError::Failed("len_text: expected Text input".into())),
         }
     }));
 }

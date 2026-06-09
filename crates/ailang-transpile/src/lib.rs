@@ -1,3 +1,2 @@
 pub mod codegen;
-#[cfg(test)]
-mod codegen_tests;
+#[cfg(test)] mod codegen_tests;

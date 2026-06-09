@@ -1,12 +1,12 @@
 # ailang — Project State
 
-Last activity: 2026-06-09 - Phase 2 COMPLETE — all 4 tasks done, 67 tests passing
+Last activity: 2026-06-09 - Phase 3 COMPLETE — all 4 tasks done, 81 tests passing
 
 ---
 
 ## Current Phase
 
-**Phase 2 — Runnable Programs**
+**Phase 3 — Extended Codegen & Validation**
 Status: COMPLETE
 
 ### Completed — Phase 0 (Foundation)
@@ -30,8 +30,14 @@ Status: COMPLETE
 - 0014: graph-builder (GraphBuilder fluent API, 5 tests)
 - 0015: cli (ailang eval/emit binary, value_to_json serialization)
 
+### Completed — Phase 3 (Extended Codegen & Validation)
+- 0016: const-literals (Const:<port>:<literal> embedded directly in codegen emit)
+- 0017: graph-validator (validate() returns all errors: FanIn, SelfLoop, SrcPortOob, DstPortOob)
+- 0018: more-builtins (eq_int, lt_int, if_int, len_text added to register_builtins)
+- 0019: wasm-emit (codegen_wasm: #[no_mangle] extern "C" fn, return type from last output node)
+
 ### Test count
-67 tests passing (38 ailang-core + 4 ailang-effects + 10 ailang-exec + 4 ailang-transpile + 9 ailang-nodes + 2 ailang-cli)
+81 tests passing (44 ailang-core + 4 ailang-effects + 10 ailang-exec + 5 ailang-transpile + 16 ailang-nodes + 2 ailang-cli)
 
 ---
 
@@ -49,3 +55,4 @@ Status: COMPLETE
 | 260608-f5y | Fix lib.rs module collision after task-0004 executor overwrite (28 tests restored) | 2026-06-08 | 1e04ea4 | 260608-f5y-fix-orchestrator-file-corruption-and-ens |
 | 260608-lon | Implement 0012-builtin-nodes manually (fix double-??, mut inputs, HashMap construction) | 2026-06-08 | 98ac264 | 260608-lon-implement-0012-builtin-nodes-fix-broken- |
 | 260609-ele | Implement Phase 2 tasks 0013-0015 manually (codegen wiring, graph builder, CLI binary) | 2026-06-09 | 7e888e7 | 260609-ele-implement-ailang-phase-2-tasks-0013-0015 |
+| 260609-fdw | Implement Phase 3 tasks 0016-0019 manually (const literals, graph validator, more builtins, wasm emit) | 2026-06-09 | pending | 260609-fdw-implement-phase-3-tasks-0016-0019 |

@@ -1,3 +1,2 @@
 pub mod builtins;
-#[cfg(test)]
-mod builtins_tests;
+#[cfg(test)] mod builtins_tests;
