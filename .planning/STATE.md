@@ -1,6 +1,6 @@
 # ailang — Project State
 
-Last activity: 2026-06-08 - Phase 2 in progress — 0012 (builtin-nodes) done, 59 tests passing
+Last activity: 2026-06-09 - Phase 2 tasks 0013-0015 done — 67 tests passing
 
 ---
 
@@ -26,12 +26,12 @@ Status: COMPLETE
 
 ### Phase 2 in progress (Runnable Programs)
 - 0012: builtin-nodes (add_int, sub_int, mul_int, neg_int, concat_text, not_bool, and_bool, or_bool) ✓
-- 0013: codegen-wiring — in progress (orchestrator running)
-- 0014: graph-builder — pending
-- 0015: cli — pending
+- 0013: codegen-wiring — done ✓ (edge rebinding emitted before each node, local CodegenError)
+- 0014: graph-builder — done ✓ (GraphBuilder fluent API, 5 tests)
+- 0015: cli — done ✓ (ailang eval/emit, value_to_json, 2 tests)
 
 ### Test count
-59 tests passing (33 ailang-core + 4 ailang-effects + 10 ailang-exec + 3 ailang-transpile + 9 ailang-nodes)
+67 tests passing (38 ailang-core + 4 ailang-effects + 10 ailang-exec + 4 ailang-transpile + 9 ailang-nodes + 2 ailang-cli)
 
 ---
 
