@@ -1,15 +1,15 @@
 use ailang_core::graph::Graph;
 use std::collections::{HashMap, VecDeque};
+
 #[derive(Debug, thiserror::Error)]
 pub enum CodegenError {
     #[error("cycle detected — cannot emit sequential code")]
     Cycle,
 }
-/// Emit a Rust function named `fn_name` that executes the graph.
-/// Returns the complete function source as a String.
+
 pub fn codegen(graph: &Graph, fn_name: &str) -> Result<String, CodegenError> {
-    // Perform topological sort using Kahn's algorithm
-    let mut in_degree = HashMap::new();
+    // Kahn's topo sort
+    let mut in_degree: HashMap<usize, usize> = HashMap::new();
     for node_idx in 0..graph.nodes().len() {
         in_degree.insert(node_idx, 0);
     }
@@ -35,34 +35,53 @@ pub fn codegen(graph: &Graph, fn_name: &str) -> Result<String, CodegenError> {
             }
         }
     }
-    // If we didn't process all nodes, there's a cycle
     if sorted_nodes.len() != graph.nodes().len() {
         return Err(CodegenError::Cycle);
     }
+
     let mut code = format!("pub fn {}() {{\n", fn_name);
     for &node_idx in &sorted_nodes {
+        // Emit input rebindings from edges BEFORE the node's own binding
+        for edge in graph.edges() {
+            if edge.dst_node == node_idx {
+                let src_port_name = &graph.nodes()[edge.src_node].outputs[edge.src_port].name;
+                let dst_port_name = &graph.nodes()[edge.dst_node].inputs[edge.dst_port].name;
+                code.push_str(&format!(
+                    "    let node_{}_{} = node_{}_{};\n",
+                    node_idx, dst_port_name, edge.src_node, src_port_name
+                ));
+            }
+        }
+        // Emit the node's own binding
         let node = &graph.nodes()[node_idx];
-        match node.kind.as_str() {
-            "Const:out" => {
-                code.push_str(&format!(
-                    "    let node_{}_out: {} = todo!(\"Const\");\n",
-                    node_idx, serde_json::to_string(&node.outputs[0].ty).unwrap()
-                ));
-            }
-            kind if kind.starts_with("Code:") => {
-                code.push_str(&format!(
-                    "    let node_{}_out: {} = {};\n",
-                    node_idx,
-                    serde_json::to_string(&node.outputs[0].ty).unwrap(),
-                    &kind["Code:".len()..]
-                ));
-            }
-            _ => {
-                code.push_str(&format!(
-                    "    let _node_{} = todo!(\"{}\");\n",
-                    node_idx, node.kind
-                ));
-            }
+        let kind = node.kind.as_str();
+        if kind.starts_with("Const:") {
+            let port = &kind["Const:".len()..];
+            let ty_str = if node.outputs.is_empty() {
+                "()".to_string()
+            } else {
+                serde_json::to_string(&node.outputs[0].ty).unwrap()
+            };
+            code.push_str(&format!(
+                "    let node_{}_{}: {} = todo!(\"Const\");\n",
+                node_idx, port, ty_str
+            ));
+        } else if kind.starts_with("Code:") {
+            let expr = &kind["Code:".len()..];
+            let ty_str = if node.outputs.is_empty() {
+                "()".to_string()
+            } else {
+                serde_json::to_string(&node.outputs[0].ty).unwrap()
+            };
+            code.push_str(&format!(
+                "    let node_{}_out: {} = {};\n",
+                node_idx, ty_str, expr
+            ));
+        } else {
+            code.push_str(&format!(
+                "    let _node_{} = todo!(\"{}\");\n",
+                node_idx, kind
+            ));
         }
     }
     code.push('}');
