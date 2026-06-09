@@ -1,12 +1,12 @@
 # ailang — Project State
 
-Last activity: 2026-06-09 - Phase 2 tasks 0013-0015 done — 67 tests passing
+Last activity: 2026-06-09 - Phase 2 COMPLETE — all 4 tasks done, 67 tests passing
 
 ---
 
 ## Current Phase
 
-**Phase 1 — Execution Layer**
+**Phase 2 — Runnable Programs**
 Status: COMPLETE
 
 ### Completed — Phase 0 (Foundation)
@@ -24,11 +24,11 @@ Status: COMPLETE
 - 0010: eval (Kahn topological sort, executes graph, passes outputs as inputs)
 - 0011: codegen (emit Rust source from Graph: Const:* → todo!, Code:<expr> → expr)
 
-### Phase 2 in progress (Runnable Programs)
-- 0012: builtin-nodes (add_int, sub_int, mul_int, neg_int, concat_text, not_bool, and_bool, or_bool) ✓
-- 0013: codegen-wiring — done ✓ (edge rebinding emitted before each node, local CodegenError)
-- 0014: graph-builder — done ✓ (GraphBuilder fluent API, 5 tests)
-- 0015: cli — done ✓ (ailang eval/emit, value_to_json, 2 tests)
+### Completed — Phase 2 (Runnable Programs)
+- 0012: builtin-nodes (add_int, sub_int, mul_int, neg_int, concat_text, not_bool, and_bool, or_bool)
+- 0013: codegen-wiring (edge rebinding emitted before each node, local CodegenError)
+- 0014: graph-builder (GraphBuilder fluent API, 5 tests)
+- 0015: cli (ailang eval/emit binary, value_to_json serialization)
 
 ### Test count
 67 tests passing (38 ailang-core + 4 ailang-effects + 10 ailang-exec + 4 ailang-transpile + 9 ailang-nodes + 2 ailang-cli)
@@ -48,3 +48,4 @@ Status: COMPLETE
 |---|-------------|------|--------|-----------|
 | 260608-f5y | Fix lib.rs module collision after task-0004 executor overwrite (28 tests restored) | 2026-06-08 | 1e04ea4 | 260608-f5y-fix-orchestrator-file-corruption-and-ens |
 | 260608-lon | Implement 0012-builtin-nodes manually (fix double-??, mut inputs, HashMap construction) | 2026-06-08 | 98ac264 | 260608-lon-implement-0012-builtin-nodes-fix-broken- |
+| 260609-ele | Implement Phase 2 tasks 0013-0015 manually (codegen wiring, graph builder, CLI binary) | 2026-06-09 | 7e888e7 | 260609-ele-implement-ailang-phase-2-tasks-0013-0015 |
