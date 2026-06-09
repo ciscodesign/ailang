@@ -55,8 +55,7 @@ pub fn codegen(graph: &Graph, fn_name: &str) -> Result<String, CodegenError> {
         // Emit the node's own binding
         let node = &graph.nodes()[node_idx];
         let kind = node.kind.as_str();
-        if kind.starts_with("Const:") {
-            let port = &kind["Const:".len()..];
+        if let Some(port) = kind.strip_prefix("Const:") {
             let ty_str = if node.outputs.is_empty() {
                 "()".to_string()
             } else {
@@ -66,8 +65,7 @@ pub fn codegen(graph: &Graph, fn_name: &str) -> Result<String, CodegenError> {
                 "    let node_{}_{}: {} = todo!(\"Const\");\n",
                 node_idx, port, ty_str
             ));
-        } else if kind.starts_with("Code:") {
-            let expr = &kind["Code:".len()..];
+        } else if let Some(expr) = kind.strip_prefix("Code:") {
             let ty_str = if node.outputs.is_empty() {
                 "()".to_string()
             } else {

@@ -1,0 +1,15 @@
+[package]
+name = "ailang-cli"
+version.workspace = true
+edition.workspace = true
+[[bin]]
+name = "ailang"
+path = "src/main.rs"
+[dependencies]
+ailang-core      = { path = "../ailang-core" }
+ailang-exec      = { path = "../ailang-exec" }
+ailang-nodes     = { path = "../ailang-nodes" }
+ailang-transpile = { path = "../ailang-transpile" }
+serde_json.workspace = true
+anyhow.workspace = true
+hex = "0.4"
