@@ -82,4 +82,4 @@ Status: COMPLETE
 | 260609-p4 | Implement Phase 4 tasks 0020-0023 (List type/value, list builtins, dead-node fold pass, CLI file I/O) | 2026-06-09 | b388747 | inline |
 | 260610-p5 | Implement Phase 5: more builtins, Map type, const_values, examples, codegen fix, serial edges | 2026-06-10 | 6d21dd2 | inline |
 | 260610-p6 | Implement Phase 6: float builtins, string ops, CLI inspect/validate — 134 tests | 2026-06-10 | f118f5f | inline |
-| 260610-p7 | Implement Phase 7: conditional ops, DOT emit, prune_dead + optimize CLI — 141 tests | 2026-06-10 | pending | inline |
+| 260610-p7 | Implement Phase 7: conditional ops, DOT emit, prune_dead + optimize CLI — 141 tests | 2026-06-10 | ff63f83 | inline |
