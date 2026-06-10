@@ -1,0 +1,60 @@
+{
+  "nodes": [
+    {
+      "id": "69259ed26e464f82f9da9ba266cc61dfebb4c1d9108fce815374d8e52aeb223a",
+      "kind": "Const:a:Hello, ",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "a",
+          "ty": "Text"
+        }
+      ]
+    },
+    {
+      "id": "9d2672c23dd85d7a055977d4912dbd08ba849dfea9ac789c0a9a5fdeb4a7e0fc",
+      "kind": "Const:b:World!",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "b",
+          "ty": "Text"
+        }
+      ]
+    },
+    {
+      "id": "f3860cb967574b1df0e66e8d239cf902c88d4d0165fb7fbd98fb35d7edbd7545",
+      "kind": "concat_text",
+      "inputs": [
+        {
+          "name": "a",
+          "ty": "Text"
+        },
+        {
+          "name": "b",
+          "ty": "Text"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "out",
+          "ty": "Text"
+        }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "src_node": 0,
+      "src_port": 0,
+      "dst_node": 2,
+      "dst_port": 0
+    },
+    {
+      "src_node": 1,
+      "src_port": 0,
+      "dst_node": 2,
+      "dst_port": 1
+    }
+  ]
+}

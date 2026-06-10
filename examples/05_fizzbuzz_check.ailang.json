@@ -1,0 +1,221 @@
+{
+  "nodes": [
+    {
+      "id": "5f75749e884a257ec2230eeb6d723782df0abbe6dbfd8567364433be8a26bd4a",
+      "kind": "Const:out:15",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "out",
+          "ty": "Int"
+        }
+      ]
+    },
+    {
+      "id": "bf7d27623f77fe7396824a0273f16bbd18ab1e4bf8a0181380467698e1f41749",
+      "kind": "Const:out:3",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "out",
+          "ty": "Int"
+        }
+      ]
+    },
+    {
+      "id": "ef77e971078a71e2c50bd0f90ece8afd27084358aa5414d16e4edcd850d35027",
+      "kind": "Const:out:5",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "out",
+          "ty": "Int"
+        }
+      ]
+    },
+    {
+      "id": "178126acc45f4d15c9ad44b080f9e959d3bd8ba0ef738e3835e1237f2db12f19",
+      "kind": "Const:out:0",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "out",
+          "ty": "Int"
+        }
+      ]
+    },
+    {
+      "id": "c4cc00b19ecf1097137c9c94fe5726751393e7912a53f61975f1a39a8470674c",
+      "kind": "Const:out:0",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "out",
+          "ty": "Int"
+        }
+      ]
+    },
+    {
+      "id": "8685af7acd8bb2afecd2c3df6b31787fe044817e220489193966fc35e6efec4f",
+      "kind": "mod_int",
+      "inputs": [
+        {
+          "name": "a",
+          "ty": "Int"
+        },
+        {
+          "name": "b",
+          "ty": "Int"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "out",
+          "ty": "Int"
+        }
+      ]
+    },
+    {
+      "id": "919fac0b2dce0bd0b651871eeda72825850e03866b26447f1a93707dce8078bb",
+      "kind": "mod_int",
+      "inputs": [
+        {
+          "name": "a",
+          "ty": "Int"
+        },
+        {
+          "name": "b",
+          "ty": "Int"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "out",
+          "ty": "Int"
+        }
+      ]
+    },
+    {
+      "id": "ab807a5568559b6b287d090eaf05e96170b4dc6c1effcad7cb4ea6e73cd9ec65",
+      "kind": "eq_int",
+      "inputs": [
+        {
+          "name": "a",
+          "ty": "Int"
+        },
+        {
+          "name": "b",
+          "ty": "Int"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "out",
+          "ty": "Bool"
+        }
+      ]
+    },
+    {
+      "id": "81215eca4956790bc24490a0851e9070988e28777bb403dc948c63aabc97afed",
+      "kind": "eq_int",
+      "inputs": [
+        {
+          "name": "a",
+          "ty": "Int"
+        },
+        {
+          "name": "b",
+          "ty": "Int"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "out",
+          "ty": "Bool"
+        }
+      ]
+    },
+    {
+      "id": "0a30d886aeb2d64bc919619ebe4cb477b7e6330eaabf08011418af6b54820c65",
+      "kind": "and_bool",
+      "inputs": [
+        {
+          "name": "a",
+          "ty": "Bool"
+        },
+        {
+          "name": "b",
+          "ty": "Bool"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "out",
+          "ty": "Bool"
+        }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "src_node": 0,
+      "src_port": 0,
+      "dst_node": 5,
+      "dst_port": 0
+    },
+    {
+      "src_node": 1,
+      "src_port": 0,
+      "dst_node": 5,
+      "dst_port": 1
+    },
+    {
+      "src_node": 0,
+      "src_port": 0,
+      "dst_node": 6,
+      "dst_port": 0
+    },
+    {
+      "src_node": 2,
+      "src_port": 0,
+      "dst_node": 6,
+      "dst_port": 1
+    },
+    {
+      "src_node": 5,
+      "src_port": 0,
+      "dst_node": 7,
+      "dst_port": 0
+    },
+    {
+      "src_node": 3,
+      "src_port": 0,
+      "dst_node": 7,
+      "dst_port": 1
+    },
+    {
+      "src_node": 6,
+      "src_port": 0,
+      "dst_node": 8,
+      "dst_port": 0
+    },
+    {
+      "src_node": 4,
+      "src_port": 0,
+      "dst_node": 8,
+      "dst_port": 1
+    },
+    {
+      "src_node": 7,
+      "src_port": 0,
+      "dst_node": 9,
+      "dst_port": 0
+    },
+    {
+      "src_node": 8,
+      "src_port": 0,
+      "dst_node": 9,
+      "dst_port": 1
+    }
+  ]
+}

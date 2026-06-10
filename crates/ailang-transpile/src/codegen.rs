@@ -1,10 +1,25 @@
 use ailang_core::graph::Graph;
+use ailang_core::ty::Type;
 use std::collections::{HashMap, VecDeque};
 
 #[derive(Debug, thiserror::Error)]
 pub enum CodegenError {
     #[error("cycle detected — cannot emit sequential code")]
     Cycle,
+}
+
+fn rust_type(ty: &Type) -> String {
+    match ty {
+        Type::Int   => "i64".into(),
+        Type::Float => "f64".into(),
+        Type::Bool  => "bool".into(),
+        Type::Text  => "String".into(),
+        Type::Bytes => "Vec<u8>".into(),
+        Type::List(inner) => format!("Vec<{}>", rust_type(inner)),
+        Type::Option(inner) => format!("Option<{}>", rust_type(inner)),
+        Type::Result(ok, err) => format!("Result<{}, {}>", rust_type(ok), rust_type(err)),
+        _ => "()".into(),
+    }
 }
 
 fn topo_sort(graph: &Graph) -> Result<Vec<usize>, CodegenError> {
@@ -40,6 +55,33 @@ fn topo_sort(graph: &Graph) -> Result<Vec<usize>, CodegenError> {
     Ok(sorted)
 }
 
+fn builtin_expr(kind: &str, node_idx: usize) -> Option<(&'static str, String)> {
+    let i = node_idx;
+    Some(match kind {
+        "add_int"      => ("i64",  format!("node_{i}_a + node_{i}_b")),
+        "sub_int"      => ("i64",  format!("node_{i}_a - node_{i}_b")),
+        "mul_int"      => ("i64",  format!("node_{i}_a * node_{i}_b")),
+        "div_int"      => ("i64",  format!("node_{i}_a / node_{i}_b")),
+        "mod_int"      => ("i64",  format!("node_{i}_a % node_{i}_b")),
+        "neg_int"      => ("i64",  format!("-node_{i}_a")),
+        "abs_int"      => ("i64",  format!("node_{i}_a.abs()")),
+        "min_int"      => ("i64",  format!("node_{i}_a.min(node_{i}_b)")),
+        "max_int"      => ("i64",  format!("node_{i}_a.max(node_{i}_b)")),
+        "add_float"    => ("f64",  format!("node_{i}_a + node_{i}_b")),
+        "eq_int"       => ("bool", format!("node_{i}_a == node_{i}_b")),
+        "lt_int"       => ("bool", format!("node_{i}_a < node_{i}_b")),
+        "gt_int"       => ("bool", format!("node_{i}_a > node_{i}_b")),
+        "not_bool"     => ("bool", format!("!node_{i}_a")),
+        "and_bool"     => ("bool", format!("node_{i}_a && node_{i}_b")),
+        "or_bool"      => ("bool", format!("node_{i}_a || node_{i}_b")),
+        "concat_text"  => ("String", format!("format!(\"{{}}{{}}\" , node_{i}_a, node_{i}_b)")),
+        "len_text"     => ("i64",  format!("node_{i}_a.len() as i64")),
+        "int_to_text"  => ("String", format!("node_{i}_a.to_string()")),
+        "bool_to_text" => ("String", format!("node_{i}_a.to_string()")),
+        _ => return None,
+    })
+}
+
 fn emit_node(graph: &Graph, node_idx: usize, code: &mut String) {
     // Input rebindings from edges
     for edge in graph.edges() {
@@ -52,38 +94,44 @@ fn emit_node(graph: &Graph, node_idx: usize, code: &mut String) {
             ));
         }
     }
-    // Node's own binding
+
     let node = &graph.nodes()[node_idx];
     let kind = node.kind.as_str();
+
     if let Some(rest) = kind.strip_prefix("Const:") {
         let (port, literal_opt) = match rest.find(':') {
             Some(pos) => (&rest[..pos], Some(&rest[pos + 1..])),
             None => (rest, None),
         };
-        let ty_str = if node.outputs.is_empty() {
-            "()".to_string()
-        } else {
-            serde_json::to_string(&node.outputs[0].ty).unwrap()
-        };
+        let ty_str = node.outputs.first().map_or("()".into(), |p| rust_type(&p.ty));
         match literal_opt {
-            Some(lit) => code.push_str(&format!(
-                "    let node_{}_{}: {} = {};\n",
-                node_idx, port, ty_str, lit
-            )),
+            Some(lit) => {
+                let expr = if ty_str == "String" {
+                    format!("\"{}\".to_string()", lit.replace('\\', "\\\\").replace('"', "\\\""))
+                } else {
+                    lit.to_string()
+                };
+                code.push_str(&format!(
+                    "    let node_{}_{}: {} = {};\n",
+                    node_idx, port, ty_str, expr
+                ));
+            }
             None => code.push_str(&format!(
                 "    let node_{}_{}: {} = todo!(\"Const\");\n",
                 node_idx, port, ty_str
             )),
         }
     } else if let Some(expr) = kind.strip_prefix("Code:") {
-        let ty_str = if node.outputs.is_empty() {
-            "()".to_string()
-        } else {
-            serde_json::to_string(&node.outputs[0].ty).unwrap()
-        };
+        let ty_str = node.outputs.first().map_or("()".into(), |p| rust_type(&p.ty));
         code.push_str(&format!(
             "    let node_{}_out: {} = {};\n",
             node_idx, ty_str, expr
+        ));
+    } else if let Some((ty_str, expr)) = builtin_expr(kind, node_idx) {
+        let out_port = node.outputs.first().map(|p| p.name.as_str()).unwrap_or("out");
+        code.push_str(&format!(
+            "    let node_{}_{}: {} = {};\n",
+            node_idx, out_port, ty_str, expr
         ));
     } else {
         code.push_str(&format!(
@@ -103,13 +151,12 @@ pub fn codegen(graph: &Graph, fn_name: &str) -> Result<String, CodegenError> {
     Ok(code)
 }
 
-fn wasm_ret_type(ty: &ailang_core::ty::Type) -> &'static str {
-    use ailang_core::ty::Type;
+fn wasm_ret_type(ty: &Type) -> &'static str {
     match ty {
-        Type::Int => "i64",
+        Type::Int   => "i64",
         Type::Float => "f64",
-        Type::Bool => "i32",
-        Type::Text => "*const u8",
+        Type::Bool  => "i32",
+        Type::Text  => "*const u8",
         _ => "()",
     }
 }

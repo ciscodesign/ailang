@@ -1,12 +1,12 @@
 # ailang — Project State
 
-Last activity: 2026-06-09 - Phase 4 COMPLETE — all 4 tasks done, 99 tests passing
+Last activity: 2026-06-10 - Phase 5 COMPLETE — 120 tests passing, 5 example programs
 
 ---
 
 ## Current Phase
 
-**Phase 4 — Lists, Fold Passes & File I/O**
+**Phase 5 — More Builtins, Map Type, Const Fold, Examples**
 Status: COMPLETE
 
 ### Completed — Phase 0 (Foundation)
@@ -42,8 +42,15 @@ Status: COMPLETE
 - 0022: graph-passes (ailang-fold: dead_nodes() — backward BFS liveness from sinks)
 - 0023: graph-file-io (CLI save/load subcommands, value_to_json handles List)
 
+### Completed — Phase 5 (More Builtins, Map Type, Const Fold, Examples)
+- 0024: more-builtins (neg_int, div_int, mod_int, gt_int, abs_int, min_int, max_int, int_to_text, bool_to_text)
+- 0025: map-type (Type::Map(k,v) + Value::Map(BTreeMap) + unify + 6 map builtins)
+- 0026: const_values fold pass (ailang-fold: extract compile-time literals from graph)
+- 0027: examples (5 runnable .ailang.json programs + README; serial fixed to round-trip edges)
+- codegen: proper Rust type names (i64/bool/String) + builtin_expr for all known kinds
+
 ### Test count
-99 tests passing (47 ailang-core + 4 ailang-effects + 12 ailang-exec + 5 ailang-fold + 5 ailang-transpile + 23 ailang-nodes + 3 ailang-cli)
+120 tests passing (50 ailang-core + 4 ailang-effects + 14 ailang-exec + 7 ailang-fold + 5 ailang-transpile + 37 ailang-nodes + 3 ailang-cli)
 
 ---
 
@@ -63,3 +70,4 @@ Status: COMPLETE
 | 260609-ele | Implement Phase 2 tasks 0013-0015 manually (codegen wiring, graph builder, CLI binary) | 2026-06-09 | 7e888e7 | 260609-ele-implement-ailang-phase-2-tasks-0013-0015 |
 | 260609-fdw | Implement Phase 3 tasks 0016-0019 manually (const literals, graph validator, more builtins, wasm emit) | 2026-06-09 | ca5238a | 260609-fdw-implement-phase-3-tasks-0016-0019 |
 | 260609-p4 | Implement Phase 4 tasks 0020-0023 (List type/value, list builtins, dead-node fold pass, CLI file I/O) | 2026-06-09 | b388747 | inline |
+| 260610-p5 | Implement Phase 5: more builtins, Map type, const_values, examples, codegen fix, serial edges | 2026-06-10 | pending | inline |

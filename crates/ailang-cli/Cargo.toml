@@ -2,11 +2,18 @@
 name = "ailang-cli"
 version.workspace = true
 edition.workspace = true
+
 [[bin]]
 name = "ailang"
 path = "src/main.rs"
+
+[[example]]
+name = "gen_examples"
+path = "examples/gen_examples.rs"
+
 [dependencies]
 ailang-core      = { path = "../ailang-core" }
+ailang-effects   = { path = "../ailang-effects" }
 ailang-exec      = { path = "../ailang-exec" }
 ailang-nodes     = { path = "../ailang-nodes" }
 ailang-transpile = { path = "../ailang-transpile" }

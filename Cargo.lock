@@ -7,6 +7,7 @@ name = "ailang-cli"
 version = "0.1.0"
 dependencies = [
  "ailang-core",
+ "ailang-effects",
  "ailang-exec",
  "ailang-nodes",
  "ailang-transpile",

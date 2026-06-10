@@ -19,6 +19,12 @@ fn run() -> anyhow::Result<()> {
             if subcmd == "eval" {
                 let mut registry = ailang_exec::registry::NodeRegistry::new();
                 ailang_nodes::builtins::register_builtins(&mut registry);
+                // auto-register any Const:<port>:<literal> nodes found in the graph
+                for node in graph.nodes() {
+                    if node.kind.starts_with("Const:") {
+                        ailang_nodes::builtins::register_const_literal(&mut registry, &node.kind);
+                    }
+                }
                 let result = ailang_exec::eval::eval(&graph, &registry)?;
                 let mut pairs: Vec<_> = result.into_iter().collect();
                 pairs.sort_by_key(|(k, _)| *k);

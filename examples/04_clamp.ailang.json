@@ -1,0 +1,103 @@
+{
+  "nodes": [
+    {
+      "id": "fc171a8e3e2e4c01649fe9a8732b07af07ae9aec2554d7fc6e45c17a3930135c",
+      "kind": "Const:out:150",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "out",
+          "ty": "Int"
+        }
+      ]
+    },
+    {
+      "id": "00167f8f4970a99bcd232663508c9c47f04b6fdd7371e55611898772e55793b2",
+      "kind": "Const:out:0",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "out",
+          "ty": "Int"
+        }
+      ]
+    },
+    {
+      "id": "b9667abdc751681eb8bb2c2569a8bd060aa74f8c06934b309b2df9d1fd115bb3",
+      "kind": "Const:out:100",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "out",
+          "ty": "Int"
+        }
+      ]
+    },
+    {
+      "id": "508fb9fe6157f05b0564de4c4755416559b36a01f2407ea84e66b43242a9b7f2",
+      "kind": "max_int",
+      "inputs": [
+        {
+          "name": "a",
+          "ty": "Int"
+        },
+        {
+          "name": "b",
+          "ty": "Int"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "out",
+          "ty": "Int"
+        }
+      ]
+    },
+    {
+      "id": "935a417dcef6e6943965f763f9108757ef58f9c98b9c268dda23b11d2dd49c6b",
+      "kind": "min_int",
+      "inputs": [
+        {
+          "name": "a",
+          "ty": "Int"
+        },
+        {
+          "name": "b",
+          "ty": "Int"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "out",
+          "ty": "Int"
+        }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "src_node": 0,
+      "src_port": 0,
+      "dst_node": 3,
+      "dst_port": 0
+    },
+    {
+      "src_node": 1,
+      "src_port": 0,
+      "dst_node": 3,
+      "dst_port": 1
+    },
+    {
+      "src_node": 3,
+      "src_port": 0,
+      "dst_node": 4,
+      "dst_port": 0
+    },
+    {
+      "src_node": 2,
+      "src_port": 0,
+      "dst_node": 4,
+      "dst_port": 1
+    }
+  ]
+}

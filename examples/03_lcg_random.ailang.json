@@ -1,0 +1,146 @@
+{
+  "nodes": [
+    {
+      "id": "90630af8002b40fb0711e33c9d247ad63024006fff995277f1a1c8729c2cf609",
+      "kind": "Const:out:42",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "out",
+          "ty": "Int"
+        }
+      ]
+    },
+    {
+      "id": "dad130fa0cedcb448459841ab7993c11760ddda9612408625f8e598c7c9dc4f0",
+      "kind": "Const:out:1664525",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "out",
+          "ty": "Int"
+        }
+      ]
+    },
+    {
+      "id": "32d51568c02d094898cfcb2dc2ed2126c34387cda65bc026a2ee796ddc2e25c3",
+      "kind": "Const:out:1013904223",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "out",
+          "ty": "Int"
+        }
+      ]
+    },
+    {
+      "id": "be8c5b4645ea4387b58358b27ee57f0cbc709202f551abf156b2c94fa1544bb1",
+      "kind": "Const:out:4294967296",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "out",
+          "ty": "Int"
+        }
+      ]
+    },
+    {
+      "id": "a9d1c34093ac34807b4f13c3c7be095a87618e6ca39e7d4b5292f5366e1b280a",
+      "kind": "mul_int",
+      "inputs": [
+        {
+          "name": "a",
+          "ty": "Int"
+        },
+        {
+          "name": "b",
+          "ty": "Int"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "out",
+          "ty": "Int"
+        }
+      ]
+    },
+    {
+      "id": "17a414f94ff9df8e671468446c1812e90d15b8d103e09fb4a8be4027c0ac567c",
+      "kind": "add_int",
+      "inputs": [
+        {
+          "name": "a",
+          "ty": "Int"
+        },
+        {
+          "name": "b",
+          "ty": "Int"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "out",
+          "ty": "Int"
+        }
+      ]
+    },
+    {
+      "id": "45d89c2392f1e164ca947576412bf807abd4311e6f100cbf0a50d518327e6a4c",
+      "kind": "mod_int",
+      "inputs": [
+        {
+          "name": "a",
+          "ty": "Int"
+        },
+        {
+          "name": "b",
+          "ty": "Int"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "out",
+          "ty": "Int"
+        }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "src_node": 1,
+      "src_port": 0,
+      "dst_node": 4,
+      "dst_port": 0
+    },
+    {
+      "src_node": 0,
+      "src_port": 0,
+      "dst_node": 4,
+      "dst_port": 1
+    },
+    {
+      "src_node": 4,
+      "src_port": 0,
+      "dst_node": 5,
+      "dst_port": 0
+    },
+    {
+      "src_node": 2,
+      "src_port": 0,
+      "dst_node": 5,
+      "dst_port": 1
+    },
+    {
+      "src_node": 5,
+      "src_port": 0,
+      "dst_node": 6,
+      "dst_port": 0
+    },
+    {
+      "src_node": 3,
+      "src_port": 0,
+      "dst_node": 6,
+      "dst_port": 1
+    }
+  ]
+}
