@@ -332,6 +332,68 @@ pub fn register_builtins(registry: &mut NodeRegistry) {
         }
     }));
 
+    // --- conditional ops (float / text / bool) ---
+
+    registry.register("eq_float", Box::new(|mut inputs: Inputs| -> Result<Outputs, ExecError> {
+        let a = inputs.remove("a").ok_or_else(|| ExecError::MissingInput("a".into()))?;
+        let b = inputs.remove("b").ok_or_else(|| ExecError::MissingInput("b".into()))?;
+        match (a, b) {
+            (Value::Float(x), Value::Float(y)) => Ok(HashMap::from([("out".into(), Value::Bool(x == y))])),
+            _ => Err(ExecError::Failed("eq_float: expected Float inputs".into())),
+        }
+    }));
+
+    registry.register("lt_float", Box::new(|mut inputs: Inputs| -> Result<Outputs, ExecError> {
+        let a = inputs.remove("a").ok_or_else(|| ExecError::MissingInput("a".into()))?;
+        let b = inputs.remove("b").ok_or_else(|| ExecError::MissingInput("b".into()))?;
+        match (a, b) {
+            (Value::Float(x), Value::Float(y)) => Ok(HashMap::from([("out".into(), Value::Bool(x < y))])),
+            _ => Err(ExecError::Failed("lt_float: expected Float inputs".into())),
+        }
+    }));
+
+    registry.register("gt_float", Box::new(|mut inputs: Inputs| -> Result<Outputs, ExecError> {
+        let a = inputs.remove("a").ok_or_else(|| ExecError::MissingInput("a".into()))?;
+        let b = inputs.remove("b").ok_or_else(|| ExecError::MissingInput("b".into()))?;
+        match (a, b) {
+            (Value::Float(x), Value::Float(y)) => Ok(HashMap::from([("out".into(), Value::Bool(x > y))])),
+            _ => Err(ExecError::Failed("gt_float: expected Float inputs".into())),
+        }
+    }));
+
+    registry.register("if_float", Box::new(|mut inputs: Inputs| -> Result<Outputs, ExecError> {
+        let cond  = inputs.remove("cond") .ok_or_else(|| ExecError::MissingInput("cond".into()))?;
+        let then  = inputs.remove("then") .ok_or_else(|| ExecError::MissingInput("then".into()))?;
+        let else_ = inputs.remove("else_").ok_or_else(|| ExecError::MissingInput("else_".into()))?;
+        match (cond, then, else_) {
+            (Value::Bool(c), Value::Float(t), Value::Float(e)) =>
+                Ok(HashMap::from([("out".into(), Value::Float(if c { t } else { e }))])),
+            _ => Err(ExecError::Failed("if_float: type mismatch".into())),
+        }
+    }));
+
+    registry.register("if_text", Box::new(|mut inputs: Inputs| -> Result<Outputs, ExecError> {
+        let cond  = inputs.remove("cond") .ok_or_else(|| ExecError::MissingInput("cond".into()))?;
+        let then  = inputs.remove("then") .ok_or_else(|| ExecError::MissingInput("then".into()))?;
+        let else_ = inputs.remove("else_").ok_or_else(|| ExecError::MissingInput("else_".into()))?;
+        match (cond, then, else_) {
+            (Value::Bool(c), Value::Text(t), Value::Text(e)) =>
+                Ok(HashMap::from([("out".into(), Value::Text(if c { t } else { e }))])),
+            _ => Err(ExecError::Failed("if_text: type mismatch".into())),
+        }
+    }));
+
+    registry.register("if_bool", Box::new(|mut inputs: Inputs| -> Result<Outputs, ExecError> {
+        let cond  = inputs.remove("cond") .ok_or_else(|| ExecError::MissingInput("cond".into()))?;
+        let then  = inputs.remove("then") .ok_or_else(|| ExecError::MissingInput("then".into()))?;
+        let else_ = inputs.remove("else_").ok_or_else(|| ExecError::MissingInput("else_".into()))?;
+        match (cond, then, else_) {
+            (Value::Bool(c), Value::Bool(t), Value::Bool(e)) =>
+                Ok(HashMap::from([("out".into(), Value::Bool(if c { t } else { e }))])),
+            _ => Err(ExecError::Failed("if_bool: type mismatch".into())),
+        }
+    }));
+
     // --- float builtins ---
 
     registry.register("sub_float", Box::new(|mut inputs: Inputs| -> Result<Outputs, ExecError> {

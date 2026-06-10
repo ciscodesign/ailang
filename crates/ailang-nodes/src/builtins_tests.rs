@@ -326,6 +326,56 @@ mod tests {
         assert_eq!(out["out"], Value::Int(1));
     }
 
+    // --- conditional ops ---
+
+    #[test]
+    fn eq_lt_gt_float() {
+        let r = reg();
+        let f = |name: &str, a: f64, b: f64| {
+            r.call(name, HashMap::from([
+                ("a".into(), Value::Float(a)),
+                ("b".into(), Value::Float(b)),
+            ])).unwrap()["out"].clone()
+        };
+        assert_eq!(f("eq_float", 1.0, 1.0), Value::Bool(true));
+        assert_eq!(f("lt_float", 1.0, 2.0), Value::Bool(true));
+        assert_eq!(f("gt_float", 3.0, 2.0), Value::Bool(true));
+        assert_eq!(f("gt_float", 1.0, 2.0), Value::Bool(false));
+    }
+
+    #[test]
+    fn if_float_selects_branch() {
+        let r = reg();
+        let out = r.call("if_float", HashMap::from([
+            ("cond".into(),  Value::Bool(true)),
+            ("then".into(),  Value::Float(1.0)),
+            ("else_".into(), Value::Float(2.0)),
+        ])).unwrap();
+        assert_eq!(out["out"], Value::Float(1.0));
+    }
+
+    #[test]
+    fn if_text_selects_branch() {
+        let r = reg();
+        let out = r.call("if_text", HashMap::from([
+            ("cond".into(),  Value::Bool(false)),
+            ("then".into(),  Value::Text("yes".into())),
+            ("else_".into(), Value::Text("no".into())),
+        ])).unwrap();
+        assert_eq!(out["out"], Value::Text("no".into()));
+    }
+
+    #[test]
+    fn if_bool_selects_branch() {
+        let r = reg();
+        let out = r.call("if_bool", HashMap::from([
+            ("cond".into(),  Value::Bool(true)),
+            ("then".into(),  Value::Bool(false)),
+            ("else_".into(), Value::Bool(true)),
+        ])).unwrap();
+        assert_eq!(out["out"], Value::Bool(false));
+    }
+
     // --- float builtins ---
 
     #[test]

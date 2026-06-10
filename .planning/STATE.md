@@ -1,12 +1,12 @@
 # ailang — Project State
 
-Last activity: 2026-06-10 - Phase 6 COMPLETE — 134 tests passing, float builtins, string ops, CLI inspect/validate
+Last activity: 2026-06-10 - Phase 7 COMPLETE — 141 tests passing, conditional ops, DOT emit, graph optimize
 
 ---
 
 ## Current Phase
 
-**Phase 6 — Float Builtins, String Ops, CLI Inspect/Validate**
+**Phase 7 — Conditional Complete, DOT Emit, Graph Optimize**
 Status: COMPLETE
 
 ### Completed — Phase 0 (Foundation)
@@ -54,8 +54,13 @@ Status: COMPLETE
 - 0029: string-ops (trim, to_upper, to_lower, contains, starts_with, ends_with, replace, split, join, slice _text; codegen exprs)
 - 0030: cli-inspect/validate (`ailang inspect` prints nodes/edges/types; `ailang validate` runs validator with exit-code 1 on error)
 
+### Completed — Phase 7 (Conditional Complete, DOT Emit, Graph Optimize)
+- 0031: conditional-complete (eq/lt/gt_float, if_float, if_text, if_bool; codegen exprs for all)
+- 0032: dot-emit (`ailang dot <graph>` → Graphviz DOT notation for visualization)
+- 0033: optimize-cmd (ailang-fold: `prune_dead(graph) -> Graph`; `ailang optimize <in> <out>` writes dead-node-pruned graph)
+
 ### Test count
-134 tests passing (50 ailang-core + 4 ailang-effects + 14 ailang-exec + 7 ailang-fold + 5 ailang-transpile + 51 ailang-nodes + 3 ailang-cli)
+141 tests passing (50 ailang-core + 4 ailang-effects + 14 ailang-exec + 10 ailang-fold + 5 ailang-transpile + 55 ailang-nodes + 3 ailang-cli)
 
 ---
 
@@ -77,3 +82,4 @@ Status: COMPLETE
 | 260609-p4 | Implement Phase 4 tasks 0020-0023 (List type/value, list builtins, dead-node fold pass, CLI file I/O) | 2026-06-09 | b388747 | inline |
 | 260610-p5 | Implement Phase 5: more builtins, Map type, const_values, examples, codegen fix, serial edges | 2026-06-10 | 6d21dd2 | inline |
 | 260610-p6 | Implement Phase 6: float builtins, string ops, CLI inspect/validate — 134 tests | 2026-06-10 | f118f5f | inline |
+| 260610-p7 | Implement Phase 7: conditional ops, DOT emit, prune_dead + optimize CLI — 141 tests | 2026-06-10 | pending | inline |

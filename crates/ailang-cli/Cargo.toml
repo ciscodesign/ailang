@@ -15,6 +15,7 @@ path = "examples/gen_examples.rs"
 ailang-core      = { path = "../ailang-core" }
 ailang-effects   = { path = "../ailang-effects" }
 ailang-exec      = { path = "../ailang-exec" }
+ailang-fold      = { path = "../ailang-fold" }
 ailang-nodes     = { path = "../ailang-nodes" }
 ailang-transpile = { path = "../ailang-transpile" }
 serde_json.workspace = true

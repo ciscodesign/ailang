@@ -99,7 +99,43 @@ fn run() -> anyhow::Result<()> {
                 }
             }
         }
-        other => anyhow::bail!("unknown subcommand: {other}. usage: ailang <eval|emit|inspect|validate|save|load> <file>"),
+        "dot" => {
+            let path = args.get(1).ok_or_else(|| anyhow::anyhow!("usage: ailang dot <graph.json>"))?;
+            let bytes = std::fs::read(path)?;
+            let graph = ailang_core::serial::decode(&bytes)?;
+            println!("digraph ailang {{");
+            println!("  rankdir=LR;");
+            println!("  node [shape=box fontname=\"monospace\"];");
+            for (i, node) in graph.nodes().iter().enumerate() {
+                let label = node.kind.replace('"', "\\\"");
+                println!("  n{i} [label=\"{i}: {label}\"];");
+            }
+            for edge in graph.edges() {
+                let src_port = &graph.nodes()[edge.src_node].outputs[edge.src_port].name;
+                let dst_port = &graph.nodes()[edge.dst_node].inputs[edge.dst_port].name;
+                println!(
+                    "  n{} -> n{} [label=\"{} → {}\"];",
+                    edge.src_node, edge.dst_node, src_port, dst_port
+                );
+            }
+            println!("}}");
+        }
+        "optimize" => {
+            let in_path  = args.get(1).ok_or_else(|| anyhow::anyhow!("usage: ailang optimize <in.json> <out.json>"))?;
+            let out_path = args.get(2).ok_or_else(|| anyhow::anyhow!("usage: ailang optimize <in.json> <out.json>"))?;
+            let bytes = std::fs::read(in_path)?;
+            let graph = ailang_core::serial::decode(&bytes)?;
+            let before = (graph.nodes().len(), graph.edges().len());
+            let optimized = ailang_fold::prune_dead(&graph);
+            let after = (optimized.nodes().len(), optimized.edges().len());
+            let json = ailang_core::serial::encode(&optimized)?;
+            std::fs::write(out_path, &json)?;
+            println!(
+                "optimized: {} → {} nodes, {} → {} edges (wrote {})",
+                before.0, after.0, before.1, after.1, out_path
+            );
+        }
+        other => anyhow::bail!("unknown subcommand: {other}. usage: ailang <eval|emit|inspect|validate|dot|optimize|save|load> <file>"),
     }
     Ok(())
 }

@@ -1,6 +1,33 @@
 use ailang_core::graph::Graph;
 use std::collections::{HashMap, HashSet};
 
+/// Returns a new Graph with all dead nodes (and their edges) removed.
+/// Node indices are remapped; edges are preserved between surviving nodes.
+pub fn prune_dead(graph: &Graph) -> Graph {
+    let dead: HashSet<usize> = dead_nodes(graph).into_iter().collect();
+    let nodes = graph.nodes();
+
+    // Build old_idx → new_idx map for surviving nodes
+    let mut remap: HashMap<usize, usize> = HashMap::new();
+    let mut new_graph = Graph::new();
+    for (old_idx, node) in nodes.iter().enumerate() {
+        if !dead.contains(&old_idx) {
+            let new_idx = new_graph.nodes().len();
+            remap.insert(old_idx, new_idx);
+            new_graph.add_node(node.clone());
+        }
+    }
+
+    // Re-add edges whose both endpoints survived
+    for edge in graph.edges() {
+        if let (Some(&src), Some(&dst)) = (remap.get(&edge.src_node), remap.get(&edge.dst_node)) {
+            let _ = new_graph.add_edge(src, edge.src_port, dst, edge.dst_port);
+        }
+    }
+
+    new_graph
+}
+
 /// Returns node_idx → (port_name, literal_string) for every `Const:<port>:<literal>` node.
 /// These values are statically known and can be inlined by codegen or an optimizer.
 pub fn const_values(graph: &Graph) -> HashMap<usize, (String, String)> {
@@ -131,5 +158,36 @@ mod tests {
         assert!(dead.contains(&0));
         assert!(dead.contains(&1));
         assert!(!dead.contains(&2));
+    }
+
+    #[test]
+    fn prune_dead_removes_floating_source() {
+        let mut g = Graph::new();
+        g.add_node(node(b"dead", vec![], vec![Type::Int])); // dead — no path to sink
+        g.add_node(node(b"src",  vec![], vec![Type::Int]));
+        g.add_node(node(b"snk",  vec![Type::Int], vec![]));
+        g.add_edge(1, 0, 2, 0).unwrap();
+        let pruned = prune_dead(&g);
+        assert_eq!(pruned.nodes().len(), 2, "dead node should be removed");
+        assert_eq!(pruned.edges().len(), 1, "live edge should survive");
+    }
+
+    #[test]
+    fn prune_dead_empty_graph() {
+        let g = Graph::new();
+        let pruned = prune_dead(&g);
+        assert!(pruned.nodes().is_empty());
+        assert!(pruned.edges().is_empty());
+    }
+
+    #[test]
+    fn prune_dead_all_live() {
+        let mut g = Graph::new();
+        g.add_node(node(b"a", vec![], vec![Type::Int]));
+        g.add_node(node(b"b", vec![Type::Int], vec![]));
+        g.add_edge(0, 0, 1, 0).unwrap();
+        let pruned = prune_dead(&g);
+        assert_eq!(pruned.nodes().len(), 2);
+        assert_eq!(pruned.edges().len(), 1);
     }
 }
