@@ -1,12 +1,12 @@
 # ailang — Project State
 
-Last activity: 2026-06-10 - Phase 5 COMPLETE — 120 tests passing, 5 example programs
+Last activity: 2026-06-10 - Phase 6 COMPLETE — 134 tests passing, float builtins, string ops, CLI inspect/validate
 
 ---
 
 ## Current Phase
 
-**Phase 5 — More Builtins, Map Type, Const Fold, Examples**
+**Phase 6 — Float Builtins, String Ops, CLI Inspect/Validate**
 Status: COMPLETE
 
 ### Completed — Phase 0 (Foundation)
@@ -49,8 +49,13 @@ Status: COMPLETE
 - 0027: examples (5 runnable .ailang.json programs + README; serial fixed to round-trip edges)
 - codegen: proper Rust type names (i64/bool/String) + builtin_expr for all known kinds
 
+### Completed — Phase 6 (Float Builtins, String Ops, CLI Inspect/Validate)
+- 0028: float-builtins (sub/mul/div/neg/abs_float, floor/ceil/round_float, int_to_float, float_to_int, float_to_text; codegen exprs)
+- 0029: string-ops (trim, to_upper, to_lower, contains, starts_with, ends_with, replace, split, join, slice _text; codegen exprs)
+- 0030: cli-inspect/validate (`ailang inspect` prints nodes/edges/types; `ailang validate` runs validator with exit-code 1 on error)
+
 ### Test count
-120 tests passing (50 ailang-core + 4 ailang-effects + 14 ailang-exec + 7 ailang-fold + 5 ailang-transpile + 37 ailang-nodes + 3 ailang-cli)
+134 tests passing (50 ailang-core + 4 ailang-effects + 14 ailang-exec + 7 ailang-fold + 5 ailang-transpile + 51 ailang-nodes + 3 ailang-cli)
 
 ---
 
@@ -71,3 +76,4 @@ Status: COMPLETE
 | 260609-fdw | Implement Phase 3 tasks 0016-0019 manually (const literals, graph validator, more builtins, wasm emit) | 2026-06-09 | ca5238a | 260609-fdw-implement-phase-3-tasks-0016-0019 |
 | 260609-p4 | Implement Phase 4 tasks 0020-0023 (List type/value, list builtins, dead-node fold pass, CLI file I/O) | 2026-06-09 | b388747 | inline |
 | 260610-p5 | Implement Phase 5: more builtins, Map type, const_values, examples, codegen fix, serial edges | 2026-06-10 | 6d21dd2 | inline |
+| 260610-p6 | Implement Phase 6: float builtins, string ops, CLI inspect/validate — 134 tests | 2026-06-10 | pending | inline |

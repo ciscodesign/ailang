@@ -325,4 +325,147 @@ mod tests {
         let out = r.call("map_len", HashMap::from([("map".into(), Value::Map(m))])).unwrap();
         assert_eq!(out["out"], Value::Int(1));
     }
+
+    // --- float builtins ---
+
+    #[test]
+    fn sub_float() {
+        let r = reg();
+        let out = r.call("sub_float", HashMap::from([
+            ("a".into(), Value::Float(5.0)),
+            ("b".into(), Value::Float(1.5)),
+        ])).unwrap();
+        assert_eq!(out["out"], Value::Float(3.5));
+    }
+
+    #[test]
+    fn mul_float() {
+        let r = reg();
+        let out = r.call("mul_float", HashMap::from([
+            ("a".into(), Value::Float(2.0)),
+            ("b".into(), Value::Float(3.5)),
+        ])).unwrap();
+        assert_eq!(out["out"], Value::Float(7.0));
+    }
+
+    #[test]
+    fn div_float() {
+        let r = reg();
+        let out = r.call("div_float", HashMap::from([
+            ("a".into(), Value::Float(7.0)),
+            ("b".into(), Value::Float(2.0)),
+        ])).unwrap();
+        assert_eq!(out["out"], Value::Float(3.5));
+    }
+
+    #[test]
+    fn neg_float() {
+        let r = reg();
+        let out = r.call("neg_float", HashMap::from([("a".into(), Value::Float(3.0))])).unwrap();
+        assert_eq!(out["out"], Value::Float(-3.0));
+    }
+
+    #[test]
+    fn abs_float() {
+        let r = reg();
+        let out = r.call("abs_float", HashMap::from([("a".into(), Value::Float(-4.5))])).unwrap();
+        assert_eq!(out["out"], Value::Float(4.5));
+    }
+
+    #[test]
+    fn floor_ceil_round() {
+        let r = reg();
+        let f = |name: &str, x: f64| r.call(name, HashMap::from([("a".into(), Value::Float(x))])).unwrap()["out"].clone();
+        assert_eq!(f("floor_float", 2.9), Value::Int(2));
+        assert_eq!(f("ceil_float",  2.1), Value::Int(3));
+        assert_eq!(f("round_float", 2.5), Value::Int(3));
+    }
+
+    #[test]
+    fn int_to_float_and_back() {
+        let r = reg();
+        let out = r.call("int_to_float", HashMap::from([("a".into(), Value::Int(7))])).unwrap();
+        assert_eq!(out["out"], Value::Float(7.0));
+        let out2 = r.call("float_to_int", HashMap::from([("a".into(), Value::Float(3.9))])).unwrap();
+        assert_eq!(out2["out"], Value::Int(3));
+    }
+
+    #[test]
+    fn float_to_text() {
+        let r = reg();
+        let out = r.call("float_to_text", HashMap::from([("a".into(), Value::Float(1.5))])).unwrap();
+        assert_eq!(out["out"], Value::Text("1.5".into()));
+    }
+
+    // --- string ops ---
+
+    #[test]
+    fn trim_text() {
+        let r = reg();
+        let out = r.call("trim_text", HashMap::from([("a".into(), Value::Text("  hi  ".into()))])).unwrap();
+        assert_eq!(out["out"], Value::Text("hi".into()));
+    }
+
+    #[test]
+    fn to_upper_lower_text() {
+        let r = reg();
+        let up = r.call("to_upper_text", HashMap::from([("a".into(), Value::Text("hello".into()))])).unwrap();
+        assert_eq!(up["out"], Value::Text("HELLO".into()));
+        let lo = r.call("to_lower_text", HashMap::from([("a".into(), Value::Text("WORLD".into()))])).unwrap();
+        assert_eq!(lo["out"], Value::Text("world".into()));
+    }
+
+    #[test]
+    fn contains_starts_ends_text() {
+        let r = reg();
+        let inp = |b: &str| HashMap::from([
+            ("a".into(), Value::Text("hello world".into())),
+            ("b".into(), Value::Text(b.into())),
+        ]);
+        assert_eq!(r.call("contains_text",    inp("world")).unwrap()["out"], Value::Bool(true));
+        assert_eq!(r.call("starts_with_text", inp("hello")).unwrap()["out"], Value::Bool(true));
+        assert_eq!(r.call("ends_with_text",   inp("world")).unwrap()["out"], Value::Bool(true));
+        assert_eq!(r.call("contains_text",    inp("xyz")).unwrap()["out"],   Value::Bool(false));
+    }
+
+    #[test]
+    fn replace_text() {
+        let r = reg();
+        let out = r.call("replace_text", HashMap::from([
+            ("a".into(),    Value::Text("foo bar foo".into())),
+            ("from".into(), Value::Text("foo".into())),
+            ("to".into(),   Value::Text("baz".into())),
+        ])).unwrap();
+        assert_eq!(out["out"], Value::Text("baz bar baz".into()));
+    }
+
+    #[test]
+    fn split_and_join_text() {
+        let r = reg();
+        let split_out = r.call("split_text", HashMap::from([
+            ("a".into(),   Value::Text("a,b,c".into())),
+            ("sep".into(), Value::Text(",".into())),
+        ])).unwrap();
+        assert_eq!(split_out["out"], Value::List(vec![
+            Value::Text("a".into()),
+            Value::Text("b".into()),
+            Value::Text("c".into()),
+        ]));
+        let join_out = r.call("join_text", HashMap::from([
+            ("list".into(), split_out["out"].clone()),
+            ("sep".into(),  Value::Text("-".into())),
+        ])).unwrap();
+        assert_eq!(join_out["out"], Value::Text("a-b-c".into()));
+    }
+
+    #[test]
+    fn slice_text() {
+        let r = reg();
+        let out = r.call("slice_text", HashMap::from([
+            ("a".into(),     Value::Text("hello".into())),
+            ("start".into(), Value::Int(1)),
+            ("end".into(),   Value::Int(4)),
+        ])).unwrap();
+        assert_eq!(out["out"], Value::Text("ell".into()));
+    }
 }

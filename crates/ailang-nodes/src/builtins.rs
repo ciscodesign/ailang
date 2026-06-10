@@ -331,4 +331,206 @@ pub fn register_builtins(registry: &mut NodeRegistry) {
             _ => Err(ExecError::Failed("map_len: expected Map".into())),
         }
     }));
+
+    // --- float builtins ---
+
+    registry.register("sub_float", Box::new(|mut inputs: Inputs| -> Result<Outputs, ExecError> {
+        let a = inputs.remove("a").ok_or_else(|| ExecError::MissingInput("a".into()))?;
+        let b = inputs.remove("b").ok_or_else(|| ExecError::MissingInput("b".into()))?;
+        match (a, b) {
+            (Value::Float(x), Value::Float(y)) => Ok(HashMap::from([("out".into(), Value::Float(x - y))])),
+            _ => Err(ExecError::Failed("sub_float: expected Float inputs".into())),
+        }
+    }));
+
+    registry.register("mul_float", Box::new(|mut inputs: Inputs| -> Result<Outputs, ExecError> {
+        let a = inputs.remove("a").ok_or_else(|| ExecError::MissingInput("a".into()))?;
+        let b = inputs.remove("b").ok_or_else(|| ExecError::MissingInput("b".into()))?;
+        match (a, b) {
+            (Value::Float(x), Value::Float(y)) => Ok(HashMap::from([("out".into(), Value::Float(x * y))])),
+            _ => Err(ExecError::Failed("mul_float: expected Float inputs".into())),
+        }
+    }));
+
+    registry.register("div_float", Box::new(|mut inputs: Inputs| -> Result<Outputs, ExecError> {
+        let a = inputs.remove("a").ok_or_else(|| ExecError::MissingInput("a".into()))?;
+        let b = inputs.remove("b").ok_or_else(|| ExecError::MissingInput("b".into()))?;
+        match (a, b) {
+            (Value::Float(x), Value::Float(y)) => Ok(HashMap::from([("out".into(), Value::Float(x / y))])),
+            _ => Err(ExecError::Failed("div_float: expected Float inputs".into())),
+        }
+    }));
+
+    registry.register("neg_float", Box::new(|mut inputs: Inputs| -> Result<Outputs, ExecError> {
+        let a = inputs.remove("a").ok_or_else(|| ExecError::MissingInput("a".into()))?;
+        match a {
+            Value::Float(x) => Ok(HashMap::from([("out".into(), Value::Float(-x))])),
+            _ => Err(ExecError::Failed("neg_float: expected Float".into())),
+        }
+    }));
+
+    registry.register("abs_float", Box::new(|mut inputs: Inputs| -> Result<Outputs, ExecError> {
+        let a = inputs.remove("a").ok_or_else(|| ExecError::MissingInput("a".into()))?;
+        match a {
+            Value::Float(x) => Ok(HashMap::from([("out".into(), Value::Float(x.abs()))])),
+            _ => Err(ExecError::Failed("abs_float: expected Float".into())),
+        }
+    }));
+
+    registry.register("floor_float", Box::new(|mut inputs: Inputs| -> Result<Outputs, ExecError> {
+        let a = inputs.remove("a").ok_or_else(|| ExecError::MissingInput("a".into()))?;
+        match a {
+            Value::Float(x) => Ok(HashMap::from([("out".into(), Value::Int(x.floor() as i64))])),
+            _ => Err(ExecError::Failed("floor_float: expected Float".into())),
+        }
+    }));
+
+    registry.register("ceil_float", Box::new(|mut inputs: Inputs| -> Result<Outputs, ExecError> {
+        let a = inputs.remove("a").ok_or_else(|| ExecError::MissingInput("a".into()))?;
+        match a {
+            Value::Float(x) => Ok(HashMap::from([("out".into(), Value::Int(x.ceil() as i64))])),
+            _ => Err(ExecError::Failed("ceil_float: expected Float".into())),
+        }
+    }));
+
+    registry.register("round_float", Box::new(|mut inputs: Inputs| -> Result<Outputs, ExecError> {
+        let a = inputs.remove("a").ok_or_else(|| ExecError::MissingInput("a".into()))?;
+        match a {
+            Value::Float(x) => Ok(HashMap::from([("out".into(), Value::Int(x.round() as i64))])),
+            _ => Err(ExecError::Failed("round_float: expected Float".into())),
+        }
+    }));
+
+    registry.register("int_to_float", Box::new(|mut inputs: Inputs| -> Result<Outputs, ExecError> {
+        let a = inputs.remove("a").ok_or_else(|| ExecError::MissingInput("a".into()))?;
+        match a {
+            Value::Int(x) => Ok(HashMap::from([("out".into(), Value::Float(x as f64))])),
+            _ => Err(ExecError::Failed("int_to_float: expected Int".into())),
+        }
+    }));
+
+    registry.register("float_to_int", Box::new(|mut inputs: Inputs| -> Result<Outputs, ExecError> {
+        let a = inputs.remove("a").ok_or_else(|| ExecError::MissingInput("a".into()))?;
+        match a {
+            Value::Float(x) => Ok(HashMap::from([("out".into(), Value::Int(x as i64))])),
+            _ => Err(ExecError::Failed("float_to_int: expected Float".into())),
+        }
+    }));
+
+    registry.register("float_to_text", Box::new(|mut inputs: Inputs| -> Result<Outputs, ExecError> {
+        let a = inputs.remove("a").ok_or_else(|| ExecError::MissingInput("a".into()))?;
+        match a {
+            Value::Float(x) => Ok(HashMap::from([("out".into(), Value::Text(x.to_string()))])),
+            _ => Err(ExecError::Failed("float_to_text: expected Float".into())),
+        }
+    }));
+
+    // --- string ops ---
+
+    registry.register("trim_text", Box::new(|mut inputs: Inputs| -> Result<Outputs, ExecError> {
+        let a = inputs.remove("a").ok_or_else(|| ExecError::MissingInput("a".into()))?;
+        match a {
+            Value::Text(s) => Ok(HashMap::from([("out".into(), Value::Text(s.trim().to_string()))])),
+            _ => Err(ExecError::Failed("trim_text: expected Text".into())),
+        }
+    }));
+
+    registry.register("to_upper_text", Box::new(|mut inputs: Inputs| -> Result<Outputs, ExecError> {
+        let a = inputs.remove("a").ok_or_else(|| ExecError::MissingInput("a".into()))?;
+        match a {
+            Value::Text(s) => Ok(HashMap::from([("out".into(), Value::Text(s.to_uppercase()))])),
+            _ => Err(ExecError::Failed("to_upper_text: expected Text".into())),
+        }
+    }));
+
+    registry.register("to_lower_text", Box::new(|mut inputs: Inputs| -> Result<Outputs, ExecError> {
+        let a = inputs.remove("a").ok_or_else(|| ExecError::MissingInput("a".into()))?;
+        match a {
+            Value::Text(s) => Ok(HashMap::from([("out".into(), Value::Text(s.to_lowercase()))])),
+            _ => Err(ExecError::Failed("to_lower_text: expected Text".into())),
+        }
+    }));
+
+    registry.register("contains_text", Box::new(|mut inputs: Inputs| -> Result<Outputs, ExecError> {
+        let a = inputs.remove("a").ok_or_else(|| ExecError::MissingInput("a".into()))?;
+        let b = inputs.remove("b").ok_or_else(|| ExecError::MissingInput("b".into()))?;
+        match (a, b) {
+            (Value::Text(s), Value::Text(needle)) => Ok(HashMap::from([("out".into(), Value::Bool(s.contains(needle.as_str())))])),
+            _ => Err(ExecError::Failed("contains_text: expected Text inputs".into())),
+        }
+    }));
+
+    registry.register("starts_with_text", Box::new(|mut inputs: Inputs| -> Result<Outputs, ExecError> {
+        let a = inputs.remove("a").ok_or_else(|| ExecError::MissingInput("a".into()))?;
+        let b = inputs.remove("b").ok_or_else(|| ExecError::MissingInput("b".into()))?;
+        match (a, b) {
+            (Value::Text(s), Value::Text(prefix)) => Ok(HashMap::from([("out".into(), Value::Bool(s.starts_with(prefix.as_str())))])),
+            _ => Err(ExecError::Failed("starts_with_text: expected Text inputs".into())),
+        }
+    }));
+
+    registry.register("ends_with_text", Box::new(|mut inputs: Inputs| -> Result<Outputs, ExecError> {
+        let a = inputs.remove("a").ok_or_else(|| ExecError::MissingInput("a".into()))?;
+        let b = inputs.remove("b").ok_or_else(|| ExecError::MissingInput("b".into()))?;
+        match (a, b) {
+            (Value::Text(s), Value::Text(suffix)) => Ok(HashMap::from([("out".into(), Value::Bool(s.ends_with(suffix.as_str())))])),
+            _ => Err(ExecError::Failed("ends_with_text: expected Text inputs".into())),
+        }
+    }));
+
+    registry.register("replace_text", Box::new(|mut inputs: Inputs| -> Result<Outputs, ExecError> {
+        let a    = inputs.remove("a")   .ok_or_else(|| ExecError::MissingInput("a".into()))?;
+        let from = inputs.remove("from").ok_or_else(|| ExecError::MissingInput("from".into()))?;
+        let to   = inputs.remove("to")  .ok_or_else(|| ExecError::MissingInput("to".into()))?;
+        match (a, from, to) {
+            (Value::Text(s), Value::Text(f), Value::Text(t)) =>
+                Ok(HashMap::from([("out".into(), Value::Text(s.replace(f.as_str(), t.as_str())))])),
+            _ => Err(ExecError::Failed("replace_text: expected Text inputs".into())),
+        }
+    }));
+
+    registry.register("split_text", Box::new(|mut inputs: Inputs| -> Result<Outputs, ExecError> {
+        let a   = inputs.remove("a")  .ok_or_else(|| ExecError::MissingInput("a".into()))?;
+        let sep = inputs.remove("sep").ok_or_else(|| ExecError::MissingInput("sep".into()))?;
+        match (a, sep) {
+            (Value::Text(s), Value::Text(d)) => {
+                let parts = s.split(d.as_str()).map(|p| Value::Text(p.to_string())).collect();
+                Ok(HashMap::from([("out".into(), Value::List(parts))]))
+            }
+            _ => Err(ExecError::Failed("split_text: expected Text inputs".into())),
+        }
+    }));
+
+    registry.register("join_text", Box::new(|mut inputs: Inputs| -> Result<Outputs, ExecError> {
+        let list = inputs.remove("list").ok_or_else(|| ExecError::MissingInput("list".into()))?;
+        let sep  = inputs.remove("sep") .ok_or_else(|| ExecError::MissingInput("sep".into()))?;
+        match (list, sep) {
+            (Value::List(items), Value::Text(d)) => {
+                let mut parts = Vec::with_capacity(items.len());
+                for item in items {
+                    match item {
+                        Value::Text(s) => parts.push(s),
+                        _ => return Err(ExecError::Failed("join_text: list contains non-Text item".into())),
+                    }
+                }
+                Ok(HashMap::from([("out".into(), Value::Text(parts.join(d.as_str())))]))
+            }
+            _ => Err(ExecError::Failed("join_text: expected List and Text sep".into())),
+        }
+    }));
+
+    registry.register("slice_text", Box::new(|mut inputs: Inputs| -> Result<Outputs, ExecError> {
+        let a     = inputs.remove("a")    .ok_or_else(|| ExecError::MissingInput("a".into()))?;
+        let start = inputs.remove("start").ok_or_else(|| ExecError::MissingInput("start".into()))?;
+        let end   = inputs.remove("end")  .ok_or_else(|| ExecError::MissingInput("end".into()))?;
+        match (a, start, end) {
+            (Value::Text(s), Value::Int(lo), Value::Int(hi)) => {
+                let lo = lo.max(0) as usize;
+                let hi = (hi as usize).min(s.len());
+                let slice = if lo <= hi { s[lo..hi].to_string() } else { String::new() };
+                Ok(HashMap::from([("out".into(), Value::Text(slice))]))
+            }
+            _ => Err(ExecError::Failed("slice_text: expected Text, Int, Int".into())),
+        }
+    }));
 }

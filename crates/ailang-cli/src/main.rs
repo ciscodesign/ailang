@@ -53,7 +53,53 @@ fn run() -> anyhow::Result<()> {
             let g = ailang_core::serial::decode(&json)?;
             println!("loaded graph: {} nodes, {} edges", g.nodes().len(), g.edges().len());
         }
-        other => anyhow::bail!("unknown subcommand: {other}. usage: ailang <eval|emit|save|load> <file>"),
+        "inspect" => {
+            let path = args.get(1).ok_or_else(|| anyhow::anyhow!("usage: ailang inspect <graph.json>"))?;
+            let bytes = std::fs::read(path)?;
+            let graph = ailang_core::serial::decode(&bytes)?;
+            println!("Graph: {} nodes, {} edges", graph.nodes().len(), graph.edges().len());
+            println!();
+            for (i, node) in graph.nodes().iter().enumerate() {
+                let inputs: Vec<String> = node.inputs.iter()
+                    .map(|p| format!("{}: {:?}", p.name, p.ty))
+                    .collect();
+                let outputs: Vec<String> = node.outputs.iter()
+                    .map(|p| format!("{}: {:?}", p.name, p.ty))
+                    .collect();
+                println!(
+                    "  node {:>2}  kind={}\n           in=[{}]\n           out=[{}]",
+                    i, node.kind,
+                    inputs.join(", "),
+                    outputs.join(", ")
+                );
+            }
+            if !graph.edges().is_empty() {
+                println!();
+                for edge in graph.edges() {
+                    println!(
+                        "  edge  node{}[{}] → node{}[{}]",
+                        edge.src_node, edge.src_port,
+                        edge.dst_node, edge.dst_port
+                    );
+                }
+            }
+        }
+        "validate" => {
+            let path = args.get(1).ok_or_else(|| anyhow::anyhow!("usage: ailang validate <graph.json>"))?;
+            let bytes = std::fs::read(path)?;
+            let graph = ailang_core::serial::decode(&bytes)?;
+            match ailang_core::validator::validate(&graph) {
+                Ok(()) => println!("ok — graph is valid"),
+                Err(errors) => {
+                    eprintln!("{} validation error(s):", errors.len());
+                    for e in &errors {
+                        eprintln!("  - {e:?}");
+                    }
+                    std::process::exit(1);
+                }
+            }
+        }
+        other => anyhow::bail!("unknown subcommand: {other}. usage: ailang <eval|emit|inspect|validate|save|load> <file>"),
     }
     Ok(())
 }
