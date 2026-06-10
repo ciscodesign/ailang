@@ -93,4 +93,16 @@ mod tests {
         let b = Type::List(Box::new(Type::Text));
         assert!(Type::unify(&a, &b).is_err());
     }
+    #[test]
+    fn map_same_types_unifies() {
+        let a = Type::Map(Box::new(Type::Text), Box::new(Type::Int));
+        let b = Type::Map(Box::new(Type::Text), Box::new(Type::Int));
+        assert!(Type::unify(&a, &b).is_ok());
+    }
+    #[test]
+    fn map_val_mismatch_fails() {
+        let a = Type::Map(Box::new(Type::Text), Box::new(Type::Int));
+        let b = Type::Map(Box::new(Type::Text), Box::new(Type::Bool));
+        assert!(Type::unify(&a, &b).is_err());
+    }
 }

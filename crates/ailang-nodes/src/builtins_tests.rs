@@ -204,4 +204,125 @@ mod tests {
         let out = r.call("list_int_sum", inputs).unwrap();
         assert_eq!(out["out"], Value::Int(35));
     }
+
+    #[test]
+    fn neg_int() {
+        let r = reg();
+        let out = r.call("neg_int", HashMap::from([("a".into(), Value::Int(7))])).unwrap();
+        assert_eq!(out["out"], Value::Int(-7));
+    }
+
+    #[test]
+    fn div_int() {
+        let r = reg();
+        let out = r.call("div_int", HashMap::from([("a".into(), Value::Int(10)), ("b".into(), Value::Int(3))])).unwrap();
+        assert_eq!(out["out"], Value::Int(3));
+    }
+
+    #[test]
+    fn div_int_by_zero() {
+        let r = reg();
+        assert!(r.call("div_int", HashMap::from([("a".into(), Value::Int(1)), ("b".into(), Value::Int(0))])).is_err());
+    }
+
+    #[test]
+    fn mod_int() {
+        let r = reg();
+        let out = r.call("mod_int", HashMap::from([("a".into(), Value::Int(17)), ("b".into(), Value::Int(5))])).unwrap();
+        assert_eq!(out["out"], Value::Int(2));
+    }
+
+    #[test]
+    fn gt_int_true() {
+        let r = reg();
+        let out = r.call("gt_int", HashMap::from([("a".into(), Value::Int(9)), ("b".into(), Value::Int(3))])).unwrap();
+        assert_eq!(out["out"], Value::Bool(true));
+    }
+
+    #[test]
+    fn abs_int() {
+        let r = reg();
+        let out = r.call("abs_int", HashMap::from([("a".into(), Value::Int(-42))])).unwrap();
+        assert_eq!(out["out"], Value::Int(42));
+    }
+
+    #[test]
+    fn min_int() {
+        let r = reg();
+        let out = r.call("min_int", HashMap::from([("a".into(), Value::Int(3)), ("b".into(), Value::Int(7))])).unwrap();
+        assert_eq!(out["out"], Value::Int(3));
+    }
+
+    #[test]
+    fn max_int() {
+        let r = reg();
+        let out = r.call("max_int", HashMap::from([("a".into(), Value::Int(3)), ("b".into(), Value::Int(7))])).unwrap();
+        assert_eq!(out["out"], Value::Int(7));
+    }
+
+    #[test]
+    fn int_to_text() {
+        let r = reg();
+        let out = r.call("int_to_text", HashMap::from([("a".into(), Value::Int(42))])).unwrap();
+        assert_eq!(out["out"], Value::Text("42".into()));
+    }
+
+    #[test]
+    fn bool_to_text() {
+        let r = reg();
+        let out = r.call("bool_to_text", HashMap::from([("a".into(), Value::Bool(true))])).unwrap();
+        assert_eq!(out["out"], Value::Text("true".into()));
+    }
+
+    #[test]
+    fn map_empty_and_set_get() {
+        let r = reg();
+        let empty = r.call("map_empty", HashMap::new()).unwrap();
+        let map = empty["out"].clone();
+        let after_set = r.call("map_set", HashMap::from([
+            ("map".into(), map),
+            ("key".into(), Value::Text("x".into())),
+            ("val".into(), Value::Int(99)),
+        ])).unwrap();
+        let out = r.call("map_get", HashMap::from([
+            ("map".into(), after_set["out"].clone()),
+            ("key".into(), Value::Text("x".into())),
+        ])).unwrap();
+        assert_eq!(out["out"], Value::Option(Some(Box::new(Value::Int(99)))));
+    }
+
+    #[test]
+    fn map_contains() {
+        let r = reg();
+        use std::collections::BTreeMap;
+        let mut m = BTreeMap::new();
+        m.insert("hello".to_string(), Value::Int(1));
+        let inputs = HashMap::from([
+            ("map".into(), Value::Map(m)),
+            ("key".into(), Value::Text("hello".into())),
+        ]);
+        let out = r.call("map_contains", inputs).unwrap();
+        assert_eq!(out["out"], Value::Bool(true));
+    }
+
+    #[test]
+    fn map_keys_returns_list() {
+        let r = reg();
+        use std::collections::BTreeMap;
+        let mut m = BTreeMap::new();
+        m.insert("a".to_string(), Value::Int(1));
+        m.insert("b".to_string(), Value::Int(2));
+        let out = r.call("map_keys", HashMap::from([("map".into(), Value::Map(m))])).unwrap();
+        assert_eq!(out["out"], Value::List(vec![Value::Text("a".into()), Value::Text("b".into())]));
+    }
+
+    #[test]
+    fn map_len() {
+        let r = reg();
+        use std::collections::BTreeMap;
+        let mut m = BTreeMap::new();
+        m.insert("k".to_string(), Value::Bool(true));
+        let out = r.call("map_len", HashMap::from([("map".into(), Value::Map(m))])).unwrap();
+        assert_eq!(out["out"], Value::Int(1));
+    }
 }

@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use ailang_exec::registry::{ExecError, Inputs, NodeRegistry, Outputs};
 use ailang_exec::value::Value;
 
@@ -192,6 +192,143 @@ pub fn register_builtins(registry: &mut NodeRegistry) {
                 Ok(HashMap::from([("out".into(), Value::Int(sum))]))
             }
             _ => Err(ExecError::Failed("list_int_sum: expected List".into())),
+        }
+    }));
+
+    registry.register("neg_int", Box::new(|mut inputs: Inputs| -> Result<Outputs, ExecError> {
+        let a = inputs.remove("a").ok_or_else(|| ExecError::MissingInput("a".into()))?;
+        match a {
+            Value::Int(x) => Ok(HashMap::from([("out".into(), Value::Int(-x))])),
+            _ => Err(ExecError::Failed("neg_int: expected Int".into())),
+        }
+    }));
+
+    registry.register("div_int", Box::new(|mut inputs: Inputs| -> Result<Outputs, ExecError> {
+        let a = inputs.remove("a").ok_or_else(|| ExecError::MissingInput("a".into()))?;
+        let b = inputs.remove("b").ok_or_else(|| ExecError::MissingInput("b".into()))?;
+        match (a, b) {
+            (Value::Int(x), Value::Int(y)) => {
+                if y == 0 { return Err(ExecError::Failed("div_int: division by zero".into())); }
+                Ok(HashMap::from([("out".into(), Value::Int(x / y))]))
+            }
+            _ => Err(ExecError::Failed("div_int: expected Int inputs".into())),
+        }
+    }));
+
+    registry.register("mod_int", Box::new(|mut inputs: Inputs| -> Result<Outputs, ExecError> {
+        let a = inputs.remove("a").ok_or_else(|| ExecError::MissingInput("a".into()))?;
+        let b = inputs.remove("b").ok_or_else(|| ExecError::MissingInput("b".into()))?;
+        match (a, b) {
+            (Value::Int(x), Value::Int(y)) => {
+                if y == 0 { return Err(ExecError::Failed("mod_int: modulo by zero".into())); }
+                Ok(HashMap::from([("out".into(), Value::Int(x % y))]))
+            }
+            _ => Err(ExecError::Failed("mod_int: expected Int inputs".into())),
+        }
+    }));
+
+    registry.register("gt_int", Box::new(|mut inputs: Inputs| -> Result<Outputs, ExecError> {
+        let a = inputs.remove("a").ok_or_else(|| ExecError::MissingInput("a".into()))?;
+        let b = inputs.remove("b").ok_or_else(|| ExecError::MissingInput("b".into()))?;
+        match (a, b) {
+            (Value::Int(x), Value::Int(y)) => Ok(HashMap::from([("out".into(), Value::Bool(x > y))])),
+            _ => Err(ExecError::Failed("gt_int: expected Int inputs".into())),
+        }
+    }));
+
+    registry.register("abs_int", Box::new(|mut inputs: Inputs| -> Result<Outputs, ExecError> {
+        let a = inputs.remove("a").ok_or_else(|| ExecError::MissingInput("a".into()))?;
+        match a {
+            Value::Int(x) => Ok(HashMap::from([("out".into(), Value::Int(x.abs()))])),
+            _ => Err(ExecError::Failed("abs_int: expected Int".into())),
+        }
+    }));
+
+    registry.register("min_int", Box::new(|mut inputs: Inputs| -> Result<Outputs, ExecError> {
+        let a = inputs.remove("a").ok_or_else(|| ExecError::MissingInput("a".into()))?;
+        let b = inputs.remove("b").ok_or_else(|| ExecError::MissingInput("b".into()))?;
+        match (a, b) {
+            (Value::Int(x), Value::Int(y)) => Ok(HashMap::from([("out".into(), Value::Int(x.min(y)))])),
+            _ => Err(ExecError::Failed("min_int: expected Int inputs".into())),
+        }
+    }));
+
+    registry.register("max_int", Box::new(|mut inputs: Inputs| -> Result<Outputs, ExecError> {
+        let a = inputs.remove("a").ok_or_else(|| ExecError::MissingInput("a".into()))?;
+        let b = inputs.remove("b").ok_or_else(|| ExecError::MissingInput("b".into()))?;
+        match (a, b) {
+            (Value::Int(x), Value::Int(y)) => Ok(HashMap::from([("out".into(), Value::Int(x.max(y)))])),
+            _ => Err(ExecError::Failed("max_int: expected Int inputs".into())),
+        }
+    }));
+
+    registry.register("int_to_text", Box::new(|mut inputs: Inputs| -> Result<Outputs, ExecError> {
+        let a = inputs.remove("a").ok_or_else(|| ExecError::MissingInput("a".into()))?;
+        match a {
+            Value::Int(x) => Ok(HashMap::from([("out".into(), Value::Text(x.to_string()))])),
+            _ => Err(ExecError::Failed("int_to_text: expected Int".into())),
+        }
+    }));
+
+    registry.register("bool_to_text", Box::new(|mut inputs: Inputs| -> Result<Outputs, ExecError> {
+        let a = inputs.remove("a").ok_or_else(|| ExecError::MissingInput("a".into()))?;
+        match a {
+            Value::Bool(b) => Ok(HashMap::from([("out".into(), Value::Text(b.to_string()))])),
+            _ => Err(ExecError::Failed("bool_to_text: expected Bool".into())),
+        }
+    }));
+
+    registry.register("map_empty", Box::new(|_inputs: Inputs| -> Result<Outputs, ExecError> {
+        Ok(HashMap::from([("out".into(), Value::Map(BTreeMap::new()))]))
+    }));
+
+    registry.register("map_set", Box::new(|mut inputs: Inputs| -> Result<Outputs, ExecError> {
+        let map  = inputs.remove("map").ok_or_else(|| ExecError::MissingInput("map".into()))?;
+        let key  = inputs.remove("key").ok_or_else(|| ExecError::MissingInput("key".into()))?;
+        let val  = inputs.remove("val").ok_or_else(|| ExecError::MissingInput("val".into()))?;
+        match (map, key) {
+            (Value::Map(mut m), Value::Text(k)) => { m.insert(k, val); Ok(HashMap::from([("out".into(), Value::Map(m))])) }
+            _ => Err(ExecError::Failed("map_set: expected Map and Text key".into())),
+        }
+    }));
+
+    registry.register("map_get", Box::new(|mut inputs: Inputs| -> Result<Outputs, ExecError> {
+        let map = inputs.remove("map").ok_or_else(|| ExecError::MissingInput("map".into()))?;
+        let key = inputs.remove("key").ok_or_else(|| ExecError::MissingInput("key".into()))?;
+        match (map, key) {
+            (Value::Map(m), Value::Text(k)) => {
+                let v = m.get(&k).cloned().map(Box::new);
+                Ok(HashMap::from([("out".into(), Value::Option(v))]))
+            }
+            _ => Err(ExecError::Failed("map_get: expected Map and Text key".into())),
+        }
+    }));
+
+    registry.register("map_contains", Box::new(|mut inputs: Inputs| -> Result<Outputs, ExecError> {
+        let map = inputs.remove("map").ok_or_else(|| ExecError::MissingInput("map".into()))?;
+        let key = inputs.remove("key").ok_or_else(|| ExecError::MissingInput("key".into()))?;
+        match (map, key) {
+            (Value::Map(m), Value::Text(k)) => Ok(HashMap::from([("out".into(), Value::Bool(m.contains_key(&k)))])),
+            _ => Err(ExecError::Failed("map_contains: expected Map and Text key".into())),
+        }
+    }));
+
+    registry.register("map_keys", Box::new(|mut inputs: Inputs| -> Result<Outputs, ExecError> {
+        let map = inputs.remove("map").ok_or_else(|| ExecError::MissingInput("map".into()))?;
+        match map {
+            Value::Map(m) => {
+                let keys = m.into_keys().map(Value::Text).collect();
+                Ok(HashMap::from([("out".into(), Value::List(keys))]))
+            }
+            _ => Err(ExecError::Failed("map_keys: expected Map".into())),
+        }
+    }));
+
+    registry.register("map_len", Box::new(|mut inputs: Inputs| -> Result<Outputs, ExecError> {
+        let map = inputs.remove("map").ok_or_else(|| ExecError::MissingInput("map".into()))?;
+        match map {
+            Value::Map(m) => Ok(HashMap::from([("out".into(), Value::Int(m.len() as i64))])),
+            _ => Err(ExecError::Failed("map_len: expected Map".into())),
         }
     }));
 }

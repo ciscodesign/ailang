@@ -23,6 +23,11 @@ impl Type {
             (Type::List(ia), Type::List(ib)) => {
                 Self::unify(ia, ib).map(|t| Type::List(Box::new(t)))
             }
+            (Type::Map(ka, va), Type::Map(kb, vb)) => {
+                let k = Self::unify(ka, kb)?;
+                let v = Self::unify(va, vb)?;
+                Ok(Type::Map(Box::new(k), Box::new(v)))
+            }
             (Type::Union(variants), t) => variants
                 .iter()
                 .find(|v| Self::unify(v, t).is_ok())

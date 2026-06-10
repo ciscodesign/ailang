@@ -1,4 +1,6 @@
 use ailang_core::ty::Type;
+use std::collections::BTreeMap;
+
 #[derive(Clone, Debug, PartialEq)]
 pub enum Value {
     Text(String),
@@ -9,7 +11,9 @@ pub enum Value {
     Option(Option<Box<Value>>),
     Result(std::result::Result<Box<Value>, Box<Value>>),
     List(Vec<Value>),
+    Map(BTreeMap<String, Value>),
 }
+
 impl Value {
     pub fn matches_type(&self, ty: &Type) -> bool {
         matches!((self, ty),
@@ -21,6 +25,7 @@ impl Value {
             | (Value::Option(_), Type::Option(_))
             | (Value::Result(_), Type::Result(_, _))
             | (Value::List(_), Type::List(_))
+            | (Value::Map(_), Type::Map(_, _))
             | (_, Type::Var(_))
         )
     }

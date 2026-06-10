@@ -14,6 +14,7 @@ pub enum Type {
     Union(Vec<Type>),
     Fold(NodeId),
     List(Box<Type>),
+    Map(Box<Type>, Box<Type>),
 }
 
 impl Type {

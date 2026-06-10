@@ -1,5 +1,15 @@
 use ailang_core::graph::Graph;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
+
+/// Returns node_idx → (port_name, literal_string) for every `Const:<port>:<literal>` node.
+/// These values are statically known and can be inlined by codegen or an optimizer.
+pub fn const_values(graph: &Graph) -> HashMap<usize, (String, String)> {
+    graph.nodes().iter().enumerate().filter_map(|(i, node)| {
+        let rest = node.kind.strip_prefix("Const:")?;
+        let pos = rest.find(':')?;
+        Some((i, (rest[..pos].to_string(), rest[pos + 1..].to_string())))
+    }).collect()
+}
 
 /// Returns indices of nodes with no path to any sink (node with no output ports).
 pub fn dead_nodes(graph: &Graph) -> Vec<usize> {
@@ -48,6 +58,34 @@ mod tests {
                 .map(|(i, ty)| PortDef { name: format!("out{i}"), ty }).collect(),
             effects: EffectSet::empty(),
         }
+    }
+
+    fn const_node(seed: &[u8], kind: &str) -> NodeDef {
+        NodeDef {
+            id: NodeId::of(seed),
+            kind: kind.into(),
+            inputs: vec![],
+            outputs: vec![PortDef { name: "out".into(), ty: Type::Int }],
+            effects: EffectSet::empty(),
+        }
+    }
+
+    #[test]
+    fn const_values_finds_literals() {
+        let mut g = Graph::new();
+        g.add_node(const_node(b"c1", "Const:out:42"));
+        g.add_node(const_node(b"c2", "Const:val:99"));
+        let cv = const_values(&g);
+        assert_eq!(cv[&0], ("out".into(), "42".into()));
+        assert_eq!(cv[&1], ("val".into(), "99".into()));
+    }
+
+    #[test]
+    fn const_values_ignores_non_const() {
+        let mut g = Graph::new();
+        g.add_node(node(b"x", vec![], vec![Type::Int])); // generic node, no Const: prefix
+        let cv = const_values(&g);
+        assert!(cv.is_empty());
     }
 
     #[test]

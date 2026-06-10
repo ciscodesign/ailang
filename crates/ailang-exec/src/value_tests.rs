@@ -31,4 +31,15 @@ mod tests {
     fn list_does_not_match_int() {
         assert!(!Value::List(vec![]).matches_type(&Type::Int));
     }
+    #[test]
+    fn map_matches_map_type() {
+        use std::collections::BTreeMap;
+        let t = Type::Map(Box::new(Type::Text), Box::new(Type::Int));
+        assert!(Value::Map(BTreeMap::new()).matches_type(&t));
+    }
+    #[test]
+    fn map_does_not_match_list() {
+        use std::collections::BTreeMap;
+        assert!(!Value::Map(BTreeMap::new()).matches_type(&Type::List(Box::new(Type::Int))));
+    }
 }

@@ -35,4 +35,10 @@ mod tests {
         assert_ne!(Type::List(Box::new(Type::Int)), Type::List(Box::new(Type::Text)));
         assert_eq!(Type::List(Box::new(Type::Int)), Type::List(Box::new(Type::Int)));
     }
+    #[test]
+    fn map_type_distinct() {
+        let m = Type::Map(Box::new(Type::Text), Box::new(Type::Int));
+        assert_eq!(m.clone(), m);
+        assert_ne!(m, Type::List(Box::new(Type::Int)));
+    }
 }

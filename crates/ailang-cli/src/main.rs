@@ -71,6 +71,9 @@ fn value_to_json(v: &ailang_exec::value::Value) -> serde_json::Value {
         Value::Result(Ok(v))       => serde_json::json!({"ok": value_to_json(v)}),
         Value::Result(Err(e))      => serde_json::json!({"err": value_to_json(e)}),
         Value::List(items)         => serde_json::Value::Array(items.iter().map(value_to_json).collect()),
+        Value::Map(m)              => serde_json::Value::Object(
+            m.iter().map(|(k, v)| (k.clone(), value_to_json(v))).collect()
+        ),
     }
 }
 
